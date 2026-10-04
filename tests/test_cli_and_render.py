@@ -41,12 +41,12 @@ def test_explain_mode_is_backward_compatible():
 
 
 def test_explain_renders_pipeline_and_evidence_boundary():
-    output = render_explain(_trace())
+    output = render_explain(_trace(), ascii_only=True)
 
     assert "Pipeline" in output
-    assert "[ok] APP" in output
-    assert "[ok] RELAY" in output
-    assert "[??] MAILBOX" in output
+    assert "* APP" in output
+    assert "* RELAY" in output
+    assert "? MAILBOX" in output
     assert "accepted-by-next-hop" in output
 
 
