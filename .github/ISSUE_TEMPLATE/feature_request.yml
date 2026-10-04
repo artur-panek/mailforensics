@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose a focused forensic capability or evidence source
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What real debugging problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence source
+      description: Which logs, queue data, protocol output, or identifiers can prove the result?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Desired behavior
+      description: What should MailForensics show or explain?
+    validations:
+      required: true

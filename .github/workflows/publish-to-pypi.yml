@@ -1,0 +1,58 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install packaging tools
+        run: python -m pip install --upgrade build twine
+      - name: Build wheel and sdist
+        run: python -m build
+      - name: Validate package metadata and README
+        run: python -m twine check --strict dist/*
+      - name: Smoke-test built wheel
+        shell: bash
+        run: |
+          python -m venv /tmp/mailforensics-release
+          /tmp/mailforensics-release/bin/python -m pip install dist/*.whl
+          /tmp/mailforensics-release/bin/mailforensics --version
+          /tmp/mailforensics-release/bin/mailforensics demo delivered --color never --ascii
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-package-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish distribution to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/mailforensics
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
