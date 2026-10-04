@@ -1,4 +1,4 @@
-# mailforensics
+# MailForensics
 
 **`strace` for an email moving through your mail stack.**
 
@@ -8,7 +8,7 @@ By [Artur Panek](https://artur.panek.tech/) · [Project page](https://artur.pane
 
 It is intentionally not an email-header analyzer and not an always-on monitoring daemon. Point it at evidence when a message disappears and ask one question: **where did this mail go?**
 
-> Early alpha. v0.5 is focused on local, evidence-driven mail forensics.
+> Early alpha. v0.5.0 is focused on local, evidence-driven mail forensics.
 
 > Origin story: this started during a rage-fix session after one SMTP invite path refused to explain where the mail was disappearing.
 
@@ -18,9 +18,9 @@ It is intentionally not an email-header analyzer and not an always-on monitoring
 The full banner appears in root help and demos, not on every normal trace:
 
 ```text
-      ╭──────────────╮
+      ╭──────────────────╮
 ──────┤  MAILFORENSICS   ├──────▶
-      ╰──────────────╯
+      ╰──────────────────╯
           trace the evidence,
           not the guess.
 ```
@@ -81,7 +81,9 @@ The output is deliberately conservative. If the evidence ends, `mailforensics` s
 
 ## Install
 
-After the first PyPI release:
+### PyPI
+
+Once v0.5.0 is published:
 
 ```bash
 python -m pip install mailforensics
@@ -94,9 +96,9 @@ mailforensics demo
 mailforensics doctor
 ```
 
-Until the first PyPI release, install from source:
+### From source
 
-## Install from source
+Until the first PyPI release, install directly from GitHub:
 
 ```bash
 git clone https://github.com/artur-panek/mailforensics.git
