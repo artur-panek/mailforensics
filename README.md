@@ -1,0 +1,3 @@
+# mailtrace
+
+Initial repository bootstrap.
