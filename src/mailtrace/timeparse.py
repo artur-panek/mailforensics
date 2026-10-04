@@ -9,7 +9,7 @@ LOCAL_TZ = datetime.now().astimezone().tzinfo or UTC
 def normalize_timestamp(value: datetime) -> datetime:
     if value.tzinfo is None:
         value = value.replace(tzinfo=LOCAL_TZ)
-    return value.astimezone(timezone.utc)
+    return value.astimezone(UTC)
 
 
 def parse_iso_timestamp(value: str) -> datetime:
