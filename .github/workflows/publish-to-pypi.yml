@@ -3,9 +3,6 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
-  push:
-    branches:
-      - "release/v0.5.1"
 
 permissions:
   contents: read
@@ -50,7 +47,6 @@ jobs:
       name: pypi
       url: https://pypi.org/p/mailforensics
     permissions:
-      contents: write
       id-token: write
     steps:
       - name: Download distribution artifacts
@@ -58,57 +54,5 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-
-      - name: Create GitHub releases for v0.5.0 and v0.5.1
-        if: github.event_name == 'push'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-
-          cat > /tmp/v0.5.0.md <<'EOF'
-          First public PyPI release of MailForensics.
-
-          Highlights:
-          - renamed the project and CLI to MailForensics / mailforensics
-          - evidence-driven tracing across application events, Postfix, Rspamd/milters, queues, and relays
-          - live Postfix queue inspection and retry-state explanation
-          - forensic pipeline view, latency breakdowns, JSON, and HTML reports
-          - demo, doctor, shell completions, fixtures, and parser plugin API
-          - secretless PyPI Trusted Publishing
-
-          Install:
-          ```bash
-          python -m pip install mailforensics==0.5.0
-          ```
-          EOF
-
-          cat > /tmp/v0.5.1.md <<'EOF'
-          Public-release polish for MailForensics.
-
-          This patch release keeps the 0.5.0 functionality intact while cleaning up the public-facing package and documentation.
-
-          Changes:
-          - rewrote the README around installation, evidence sources, commands, and correlation semantics
-          - made PyPI installation the primary quick-start path
-          - simplified the forensic branding presentation and examples
-          - removed development-history framing from the main project page
-          - refreshed the package description shown on PyPI
-
-          No breaking CLI or parser changes.
-
-          Install:
-          ```bash
-          python -m pip install --upgrade mailforensics
-          ```
-          EOF
-
-          if ! gh release view v0.5.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release create v0.5.0               --repo "$GITHUB_REPOSITORY"               --target 8bb102ff5432637a86fa33fdc50b1a60e1ddaf26               --title "MailForensics v0.5.0"               --notes-file /tmp/v0.5.0.md
-          fi
-
-          gh release create v0.5.1             --repo "$GITHUB_REPOSITORY"             --target "$GITHUB_SHA"             --title "MailForensics v0.5.1"             --notes-file /tmp/v0.5.1.md
-
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
