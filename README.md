@@ -83,7 +83,7 @@ The output is deliberately conservative. If the evidence ends, `mailforensics` s
 
 ### PyPI
 
-Once v0.5.0 is published:
+Install from PyPI:
 
 ```bash
 python -m pip install mailforensics
@@ -98,7 +98,7 @@ mailforensics doctor
 
 ### From source
 
-Until the first PyPI release, install directly from GitHub:
+Or install directly from GitHub for development:
 
 ```bash
 git clone https://github.com/artur-panek/mailforensics.git
