@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
-LOCAL_TZ = datetime.now().astimezone().tzinfo or timezone.utc
+LOCAL_TZ = datetime.now().astimezone().tzinfo or UTC
 
 
 def normalize_timestamp(value: datetime) -> datetime:
