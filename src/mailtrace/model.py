@@ -27,6 +27,24 @@ class Assessment:
     caveat: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class LatencySpan:
+    from_stage: str
+    to_stage: str
+    duration_ms: int
+    from_timestamp: datetime
+    to_timestamp: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class PipelineStage:
+    key: str
+    label: str
+    state: str
+    detail: str
+    timestamp: datetime | None = None
+
+
 @dataclass(slots=True)
 class Trace:
     events: list[Event]
@@ -37,17 +55,19 @@ class Trace:
 
     @property
     def status(self) -> str:
-        statuses = [
-            str(event.details.get("status", "")).casefold()
+        delivery = [
+            event
             for event in self.events
-            if event.source == "postfix" and event.kind == "delivery"
+            if event.source == "postfix"
+            and event.kind == "delivery"
+            and event.details.get("status")
         ]
-        if "bounced" in statuses:
-            return "bounced"
-        if "deferred" in statuses:
-            return "deferred"
-        if "sent" in statuses:
-            return "sent"
+        if delivery:
+            return str(delivery[-1].details["status"]).casefold()
+        if any(event.kind in {"milter-reject", "filter-reject"} for event in self.events):
+            return "rejected"
+        if any(event.kind == "live-queue" for event in self.events):
+            return "queued"
         if any(event.kind == "queued" for event in self.events):
             return "queued"
         if any(event.kind == "submitted" for event in self.events):

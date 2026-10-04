@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from datetime import datetime
 
 from .model import Event
+from .syslog import parse_rfc5424
 from .timeparse import parse_classic_syslog, parse_iso_timestamp
 from .trace import find_trace as find_trace
 
@@ -29,9 +30,22 @@ STATUS_RE = re.compile(r"status=(?P<value>[A-Za-z]+)", re.IGNORECASE)
 DSN_RE = re.compile(r"dsn=(?P<value>[0-9.]+)", re.IGNORECASE)
 DELAY_RE = re.compile(r"delay=(?P<value>[0-9.]+)", re.IGNORECASE)
 QUEUED_AS_RE = re.compile(r"queued as (?P<value>[A-Za-z0-9]+)", re.IGNORECASE)
+MILTER_STAGE_RE = re.compile(
+    r"milter-(?:reject|discard):\s*(?P<value>[^\s;]+)",
+    re.IGNORECASE,
+)
 
 
 def _parse_timestamp(line: str, year: int) -> tuple[datetime, dict[str, str]] | None:
+    rfc5424 = parse_rfc5424(line)
+    if rfc5424 and rfc5424.app.startswith("postfix/"):
+        return rfc5424.timestamp, {
+            "host": rfc5424.host,
+            "process": rfc5424.app,
+            "pid": rfc5424.procid,
+            "body": rfc5424.body,
+        }
+
     iso_match = ISO_SYSLOG_RE.match(line)
     if iso_match:
         return parse_iso_timestamp(iso_match.group("timestamp")), iso_match.groupdict()
@@ -47,6 +61,11 @@ def _parse_timestamp(line: str, year: int) -> tuple[datetime, dict[str, str]] | 
 
 
 def _kind_for(component: str, detail: str, details: dict[str, str]) -> str:
+    lowered = detail.casefold()
+    if "milter-reject:" in lowered:
+        return "milter-reject"
+    if "milter-discard:" in lowered:
+        return "milter-discard"
     if component == "cleanup" and "message_id" in details:
         return "message-id"
     if component == "qmgr":
@@ -59,7 +78,7 @@ def _kind_for(component: str, detail: str, details: dict[str, str]) -> str:
         return "received"
     if component == "bounce":
         return "bounce"
-    if "removed" in detail.lower():
+    if "removed" in lowered:
         return "removed"
     return "activity"
 
@@ -93,6 +112,7 @@ def parse_postfix(lines: Iterable[str], *, year: int | None = None) -> list[Even
             "dsn": DSN_RE,
             "delay": DELAY_RE,
             "linked_queue_id": QUEUED_AS_RE,
+            "milter_stage": MILTER_STAGE_RE,
         }
         for key, pattern in extractors.items():
             match = pattern.search(detail)
@@ -101,6 +121,14 @@ def parse_postfix(lines: Iterable[str], *, year: int | None = None) -> list[Even
                 if key == "linked_queue_id":
                     value = value.upper()
                 details[key] = value
+
+        lowered = detail.casefold()
+        if "milter-reject:" in lowered:
+            details["milter_action"] = "reject"
+            details.setdefault("status", "rejected")
+        elif "milter-discard:" in lowered:
+            details["milter_action"] = "discard"
+            details.setdefault("status", "discarded")
 
         events.append(
             Event(

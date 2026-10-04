@@ -7,6 +7,10 @@ def _stage(event: Event) -> str:
     return f"{event.source}:{event.component}"
 
 
+def _latest(events: list[Event]) -> Event | None:
+    return max(events, key=lambda event: event.timestamp) if events else None
+
+
 def assess(trace: Trace) -> Assessment:
     if not trace.events:
         return Assessment(
@@ -17,80 +21,103 @@ def assess(trace: Trace) -> Assessment:
             caveat="This says nothing about systems whose logs were not provided.",
         )
 
-    last = trace.events[-1]
+    events = sorted(trace.events, key=lambda event: event.timestamp)
+    last = events[-1]
     delivery_events = [
         event
-        for event in trace.events
+        for event in events
         if event.source == "postfix"
         and event.kind == "delivery"
         and event.details.get("status")
     ]
-    statuses = [str(event.details["status"]).casefold() for event in delivery_events]
+    latest_delivery = _latest(delivery_events)
 
-    if "bounced" in statuses:
-        event = next(
-            event
-            for event in reversed(delivery_events)
-            if str(event.details["status"]).casefold() == "bounced"
-        )
-        return Assessment(
-            outcome="bounced",
-            last_confirmed_stage=_stage(event),
-            confidence="high",
-            summary="Postfix recorded a bounce for the correlated message.",
-        )
+    live_queue = _latest([event for event in events if event.kind == "live-queue"])
 
-    if "deferred" in statuses:
-        event = next(
-            event
-            for event in reversed(delivery_events)
-            if str(event.details["status"]).casefold() == "deferred"
-        )
-        return Assessment(
-            outcome="deferred",
-            last_confirmed_stage=_stage(event),
-            confidence="high",
-            summary="Postfix deferred delivery; the supplied trace contains no later successful delivery.",
-            caveat="Postfix may retry after the end of the supplied log window.",
-        )
+    if latest_delivery:
+        status = str(latest_delivery.details["status"]).casefold()
 
-    if "sent" in statuses:
-        event = next(
-            event
-            for event in reversed(delivery_events)
-            if str(event.details["status"]).casefold() == "sent"
-        )
-        return Assessment(
-            outcome="accepted-by-next-hop",
-            last_confirmed_stage=_stage(event),
-            confidence="high",
-            summary="Postfix recorded status=sent: the next SMTP/LMTP/local hop accepted the message.",
-            caveat="This is not proof that the message reached a recipient's inbox.",
-        )
+        if status == "sent":
+            return Assessment(
+                outcome="accepted-by-next-hop",
+                last_confirmed_stage=_stage(latest_delivery),
+                confidence="high",
+                summary="Postfix recorded status=sent: the next SMTP/LMTP/local hop accepted the message.",
+                caveat="This is not proof that the message reached a recipient's inbox.",
+            )
 
-    rspamd_events = [event for event in trace.events if event.source == "rspamd"]
-    postfix_queued = [
+        if status == "bounced":
+            return Assessment(
+                outcome="bounced",
+                last_confirmed_stage=_stage(latest_delivery),
+                confidence="high",
+                summary="The latest Postfix delivery result is a bounce.",
+            )
+
+        if status == "deferred":
+            if live_queue and live_queue.timestamp >= latest_delivery.timestamp:
+                return Assessment(
+                    outcome="queued-for-retry",
+                    last_confirmed_stage=_stage(live_queue),
+                    confidence="high",
+                    summary="Postfix deferred delivery and the message is still present in the live queue.",
+                    caveat="Postfix can retry later according to its queue schedule.",
+                )
+            return Assessment(
+                outcome="deferred",
+                last_confirmed_stage=_stage(latest_delivery),
+                confidence="high",
+                summary="The latest Postfix delivery result is deferred.",
+                caveat="Postfix may retry after the end of the supplied evidence window.",
+            )
+
+    milter_rejections = [
         event
-        for event in trace.events
-        if event.source == "postfix" and event.kind == "queued"
+        for event in events
+        if event.kind in {"milter-reject", "milter-discard"}
     ]
-    postfix_seen = [event for event in trace.events if event.source == "postfix"]
-    non_postfix = [event for event in trace.events if event.source != "postfix"]
+    if event := _latest(milter_rejections):
+        action = event.details.get("milter_action", "reject")
+        return Assessment(
+            outcome=f"milter-{action}",
+            last_confirmed_stage=_stage(event),
+            confidence="high",
+            summary=f"Postfix recorded a milter {action} decision.",
+        )
 
+    rspamd_events = [event for event in events if event.source == "rspamd"]
     rejected_by_filter = [
         event
         for event in rspamd_events
-        if str(event.details.get("action", "")).casefold() == "reject"
+        if str(event.details.get("action", "")).casefold()
+        in {"reject", "soft reject", "discard"}
     ]
-    if rejected_by_filter:
-        event = rejected_by_filter[-1]
+    if event := _latest(rejected_by_filter):
+        action = str(event.details.get("action", "reject"))
         return Assessment(
             outcome="rejected-by-filter",
             last_confirmed_stage=_stage(event),
             confidence="high",
-            summary="Rspamd recorded a reject action for the correlated message.",
-            caveat="This confirms the filter decision; the SMTP rejection itself requires SMTP/milter evidence.",
+            summary=f"Rspamd recorded action={action} for the correlated message.",
+            caveat="A matching SMTP/milter rejection would provide stronger end-to-end evidence.",
         )
+
+    if live_queue:
+        return Assessment(
+            outcome="queued-live",
+            last_confirmed_stage=_stage(live_queue),
+            confidence="high",
+            summary="The correlated message is currently present in the Postfix queue.",
+            caveat="Queue presence does not by itself explain why delivery has not completed.",
+        )
+
+    postfix_queued = [
+        event
+        for event in events
+        if event.source == "postfix" and event.kind == "queued"
+    ]
+    postfix_seen = [event for event in events if event.source == "postfix"]
+    non_postfix = [event for event in events if event.source != "postfix"]
 
     if rspamd_events:
         event = rspamd_events[-1]
