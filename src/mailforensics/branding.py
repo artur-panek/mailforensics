@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 FORENSIC_BANNER = """\
-      ╭──────────────╮
+      ╭──────────────────╮
 ──────┤  MAILFORENSICS   ├──────▶
-      ╰──────────────╯
+      ╰──────────────────╯
           trace the evidence,
           not the guess."""
 
 FORENSIC_BANNER_ASCII = """\
-      +--------------+
+      +------------------+
 ------|  MAILFORENSICS   |------->
-      +--------------+
+      +------------------+
           trace the evidence,
           not the guess."""
 
