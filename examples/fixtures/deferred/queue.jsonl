@@ -1,0 +1,1 @@
+{"queue_name":"deferred","queue_id":"0DC461ACD87","arrival_time":1791115200,"message_size":1184,"sender":"app@example.net","recipients":[{"address":"tester@example.com","delay_reason":"connect timed out"}]}

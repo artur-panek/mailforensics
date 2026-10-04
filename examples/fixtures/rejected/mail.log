@@ -1,0 +1,2 @@
+2026-10-04T12:00:00.092+00:00 gateway postfix/cleanup[1200]: 0DC461ACD87: message-id=<invite-123@example.net>
+2026-10-04T12:00:00.126+00:00 gateway rspamd[2200]: <abc>; task; rspamd_task_write_log: id: <invite-123@example.net>, qid: <0DC461ACD87>, (default: T (reject): [20.00/15.00])

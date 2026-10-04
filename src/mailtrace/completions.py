@@ -4,10 +4,9 @@ SHELLS = ("bash", "zsh", "fish")
 
 BASH = """# bash completion for mailtrace
 _mailtrace_complete() {
-  local cur prev
+  local cur
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
-  prev="${COMP_WORDS[COMP_CWORD-1]}"
   local commands="trace explain demo doctor parsers completion"
   local common="--file --events --journal --unit --since --until --live-queue --queue-file --no-plugins --message-id --queue --to --correlation-id --year --json --html --color --ascii --version --help"
   if [[ ${COMP_CWORD} -eq 1 ]]; then
