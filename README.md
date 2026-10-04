@@ -8,6 +8,8 @@ It is intentionally not an email-header analyzer and not a monitoring daemon. Po
 
 > Early alpha. The first release focuses on Postfix and local log analysis.
 
+> Origin story: this started during a rage-fix session after one SMTP invite path refused to explain where the mail was disappearing.
+
 ## Example
 
 ```console
