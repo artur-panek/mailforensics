@@ -95,18 +95,7 @@ def build_pipeline(trace: Trace) -> list[PipelineStage]:
         for event in events
         if event.source == "postfix" and event.kind == "queued"
     ]
-    live_queue = [event for event in events if event.kind == "live-queue"]
-    if event := _last(live_queue):
-        stages.append(
-            PipelineStage(
-                key="queue",
-                label="QUEUE",
-                state="pending",
-                detail=_detail(event),
-                timestamp=event.timestamp,
-            )
-        )
-    elif event := _last(queue_events):
+    if event := _last(queue_events):
         stages.append(
             PipelineStage(
                 key="queue",
@@ -122,8 +111,9 @@ def build_pipeline(trace: Trace) -> list[PipelineStage]:
         for event in events
         if event.source == "postfix" and event.kind == "delivery"
     ]
-    if event := _last(deliveries):
-        status = str(event.details.get("status", "unknown")).casefold()
+    latest_delivery = _last(deliveries)
+    if latest_delivery:
+        status = str(latest_delivery.details.get("status", "unknown")).casefold()
         if status == "sent":
             state = "confirmed"
         elif status == "deferred":
@@ -137,12 +127,27 @@ def build_pipeline(trace: Trace) -> list[PipelineStage]:
                 key="relay",
                 label="RELAY",
                 state=state,
-                detail=_detail(event),
-                timestamp=event.timestamp,
+                detail=_detail(latest_delivery),
+                timestamp=latest_delivery.timestamp,
             )
         )
 
-        if status == "sent":
+    live_queue = [event for event in events if event.kind == "live-queue"]
+    latest_live_queue = _last(live_queue)
+    if latest_live_queue:
+        stages.append(
+            PipelineStage(
+                key="queue-live",
+                label="QUEUE NOW",
+                state="pending",
+                detail=_detail(latest_live_queue),
+                timestamp=latest_live_queue.timestamp,
+            )
+        )
+
+    if latest_delivery:
+        status = str(latest_delivery.details.get("status", "unknown")).casefold()
+        if status == "sent" and not latest_live_queue:
             stages.append(
                 PipelineStage(
                     key="mailbox",
