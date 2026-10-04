@@ -34,15 +34,15 @@ python -m venv /tmp/mailforensics-release
 /tmp/mailforensics-release/bin/mailforensics demo delivered --color never --ascii
 ```
 
-## First public release
+## Releases
 
-After the pending publisher exists and CI is green:
+For each public release:
 
 1. Merge the release-ready PR into `main`.
-2. Create a GitHub Release tagged `v0.5.0` from `main`.
+2. Create a GitHub Release tagged `vX.Y.Z` from `main`.
 3. The workflow builds a fresh sdist and wheel.
 4. The `pypi` job obtains a short-lived OIDC credential.
-5. PyPI creates the pending `mailforensics` project on the first successful publish.
+5. PyPI publishes the matching wheel and source distribution.
 6. Verify:
 
 ```bash
