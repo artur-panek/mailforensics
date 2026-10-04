@@ -2,6 +2,8 @@
 
 **`strace` for an email moving through your mail stack.**
 
+By [Artur Panek](https://artur.panek.tech/) · [Project page](https://artur.panek.tech/work/mailtrace/)
+
 `mailtrace` reconstructs and explains an outbound message by correlating evidence from applications, Postfix, Rspamd/milters, live queues, handoffs, and relays.
 
 It is intentionally not an email-header analyzer and not an always-on monitoring daemon. Point it at evidence when a message disappears and ask one question: **where did this mail go?**
