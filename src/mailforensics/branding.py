@@ -2,20 +2,20 @@ from __future__ import annotations
 
 FORENSIC_BANNER = """\
       ╭──────────────╮
-──────┤  MAILTRACE   ├──────▶
+──────┤  MAILFORENSICS   ├──────▶
       ╰──────────────╯
           trace the evidence,
           not the guess."""
 
 FORENSIC_BANNER_ASCII = """\
       +--------------+
-------|  MAILTRACE   |------->
+------|  MAILFORENSICS   |------->
       +--------------+
           trace the evidence,
           not the guess."""
 
-COMPACT_MARK = "✉──●──●──●──▶  MAILTRACE"
-COMPACT_MARK_ASCII = "[mail]--o--o--o-->  MAILTRACE"
+COMPACT_MARK = "✉──●──●──●──▶  MAILFORENSICS"
+COMPACT_MARK_ASCII = "[mail]--o--o--o-->  MAILFORENSICS"
 
 
 def banner(*, ascii_only: bool = False) -> str:

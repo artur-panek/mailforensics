@@ -2,8 +2,8 @@ from __future__ import annotations
 
 SHELLS = ("bash", "zsh", "fish")
 
-BASH = """# bash completion for mailtrace
-_mailtrace_complete() {
+BASH = """# bash completion for mailforensics
+_mailforensics_complete() {
   local cur
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
@@ -20,17 +20,17 @@ _mailtrace_complete() {
     *) COMPREPLY=( $(compgen -W "$common" -- "$cur") ) ;;
   esac
 }
-complete -F _mailtrace_complete mailtrace
+complete -F _mailforensics_complete mailforensics
 """
 
-ZSH = """#compdef mailtrace
-_mailtrace() {
+ZSH = """#compdef mailforensics
+_mailforensics() {
   local -a commands
   commands=(
     'trace:show the full evidence timeline'
     'explain:show the compact forensic pipeline'
     'demo:run a built-in zero-setup scenario'
-    'doctor:check local mailtrace capabilities'
+    'doctor:check local mailforensics capabilities'
     'parsers:list parser adapters'
     'completion:print shell completion script'
   )
@@ -44,19 +44,19 @@ _mailtrace() {
     completion) _values 'shell' bash zsh fish ;;
   esac
 }
-compdef _mailtrace mailtrace
+compdef _mailforensics mailforensics
 """
 
-FISH = """# fish completion for mailtrace
-complete -c mailtrace -f
-complete -c mailtrace -n '__fish_use_subcommand' -a trace -d 'Show full evidence timeline'
-complete -c mailtrace -n '__fish_use_subcommand' -a explain -d 'Show compact forensic pipeline'
-complete -c mailtrace -n '__fish_use_subcommand' -a demo -d 'Run built-in demo'
-complete -c mailtrace -n '__fish_use_subcommand' -a doctor -d 'Check local capabilities'
-complete -c mailtrace -n '__fish_use_subcommand' -a parsers -d 'List parser adapters'
-complete -c mailtrace -n '__fish_use_subcommand' -a completion -d 'Print shell completion'
-complete -c mailtrace -n '__fish_seen_subcommand_from demo' -a 'deferred delivered rejected gap'
-complete -c mailtrace -n '__fish_seen_subcommand_from completion' -a 'bash zsh fish'
+FISH = """# fish completion for mailforensics
+complete -c mailforensics -f
+complete -c mailforensics -n '__fish_use_subcommand' -a trace -d 'Show full evidence timeline'
+complete -c mailforensics -n '__fish_use_subcommand' -a explain -d 'Show compact forensic pipeline'
+complete -c mailforensics -n '__fish_use_subcommand' -a demo -d 'Run built-in demo'
+complete -c mailforensics -n '__fish_use_subcommand' -a doctor -d 'Check local capabilities'
+complete -c mailforensics -n '__fish_use_subcommand' -a parsers -d 'List parser adapters'
+complete -c mailforensics -n '__fish_use_subcommand' -a completion -d 'Print shell completion'
+complete -c mailforensics -n '__fish_seen_subcommand_from demo' -a 'deferred delivered rejected gap'
+complete -c mailforensics -n '__fish_seen_subcommand_from completion' -a 'bash zsh fish'
 """
 
 def completion_script(shell: str) -> str:
