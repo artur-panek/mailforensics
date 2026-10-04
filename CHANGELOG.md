@@ -2,8 +2,8 @@
 
 ## 0.5.0
 
-- rename the project, Python package, and CLI from `mailtrace` to `mailforensics` before the first PyPI release
-- establish a distinct identity from the existing SiriusKoan/mailtrace project
+- rename the project, Python package, and CLI from `MailForensics` to `mailforensics` before the first PyPI release
+- rename before the first public PyPI release to avoid a naming collision with an existing mail-tracing package
 - prepare secretless PyPI Trusted Publishing through GitHub Actions OIDC
 - add package build validation and clean-wheel smoke testing
 - add contribution and issue-reporting workflows
