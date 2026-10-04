@@ -1,0 +1,46 @@
+name: Render social preview
+
+on:
+  push:
+    branches:
+      - docs/social-preview
+    paths:
+      - docs/assets/mailforensics-social-preview.svg
+      - .github/workflows/render-social-preview.yml
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install renderer
+        run: python -m pip install cairosvg
+      - name: Render PNG
+        run: |
+          python - <<'PY'
+          import cairosvg
+          cairosvg.svg2png(
+              url="docs/assets/mailforensics-social-preview.svg",
+              write_to="docs/assets/mailforensics-social-preview.png",
+              output_width=1280,
+              output_height=640,
+          )
+          PY
+      - name: Commit rendered preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/assets/mailforensics-social-preview.png
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "docs: render MailForensics social preview [skip ci]"
+          git push
