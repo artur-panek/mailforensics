@@ -20,7 +20,7 @@ It correlates application events, Postfix queue IDs, Message-IDs, Rspamd/milter 
           not the guess.
 ```
 
-By [Artur Panek](https://artur.panek.tech/) · [Project page](https://artur.panek.tech/work/mailforensics/)
+By [Artur Panek](https://artur.panek.tech/) · [PyPI](https://pypi.org/project/mailforensics/) · [Releases](https://github.com/artur-panek/mailforensics/releases)
 
 ## Quick start
 
@@ -43,6 +43,16 @@ mailforensics doctor
 ```
 
 Python 3.11+ is required. Live journald and Postfix queue inspection are intended for Linux; file, JSONL, and saved-queue analysis can be used independently.
+
+## When it is useful
+
+Use MailForensics when:
+
+- an application says it submitted mail, but the message never seems to arrive;
+- a message changes queue ID during a `queued as` handoff;
+- a deferred message may or may not still be present in the live queue;
+- Rspamd, a milter, Postfix, and the next relay each tell only part of the story;
+- you need to know exactly what the logs prove — without turning missing evidence into a guessed root cause.
 
 ## What it does
 
@@ -175,7 +185,7 @@ mailforensics explain \
   --correlation-id invite-42
 ```
 
-See [structured application events](docs/structured-events.md) for the supported schema.
+See [structured application events](https://github.com/artur-panek/mailforensics/blob/main/docs/structured-events.md) for the supported schema.
 
 ## Correlation model
 
@@ -197,7 +207,7 @@ Postfix queue ID ─── queued as ─── next queue ID
 
 Timestamp proximity alone is **never** enough to merge two messages.
 
-See [correlation model](docs/correlation.md) for details.
+See [correlation model](https://github.com/artur-panek/mailforensics/blob/main/docs/correlation.md) for details.
 
 ## Evidence semantics
 
@@ -263,7 +273,7 @@ my_gateway = "my_mailforensics_plugin:parse"
 
 Parsers should emit `mailforensics.model.Event` objects and only attach identifiers that are supported by the source evidence.
 
-See [parser plugin API](docs/parser-plugins.md).
+See [parser plugin API](https://github.com/artur-panek/mailforensics/blob/main/docs/parser-plugins.md).
 
 ## Shell completion
 
@@ -299,7 +309,7 @@ pytest
 
 CI also builds the wheel and source distribution, validates package metadata with `twine check --strict`, and installs the built wheel in a clean virtual environment.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+See [CONTRIBUTING.md](https://github.com/artur-panek/mailforensics/blob/main/CONTRIBUTING.md) for contribution guidelines.
 
 ## Origin
 
