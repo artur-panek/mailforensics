@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mailforensics"
-version = "0.5.0"
+version = "0.5.1"
 description = "Evidence-driven CLI for tracing and diagnosing outbound email flow across applications, Postfix, filters, queues, and relays."
 readme = "README.md"
 requires-python = ">=3.11"
