@@ -24,6 +24,16 @@ def _identifiers(event: Event) -> set[tuple[str, str]]:
     return identifiers
 
 
+def _matches_recipient(event: Event, recipient: str) -> bool:
+    candidate = event.details.get("recipient")
+    if candidate and str(candidate).casefold() == recipient.casefold():
+        return True
+    recipients = event.details.get("recipients")
+    if isinstance(recipients, list):
+        return any(str(value).casefold() == recipient.casefold() for value in recipients)
+    return False
+
+
 def find_trace(
     events: list[Event],
     *,
@@ -59,11 +69,15 @@ def find_trace(
             if ("queue", normalized_queue) in event_ids:
                 selected.add(index)
     elif recipient is not None:
-        query = f"to=<{recipient}>"
-        for index, event in enumerate(events):
-            candidate = event.details.get("recipient")
-            if candidate and str(candidate).casefold() == recipient.casefold():
-                selected.add(index)
+        query = f"to=<{recipient}> (latest match)"
+        matches = [
+            (index, event)
+            for index, event in enumerate(events)
+            if _matches_recipient(event, recipient)
+        ]
+        if matches:
+            latest_index, _ = max(matches, key=lambda item: item[1].timestamp)
+            selected.add(latest_index)
     else:
         assert correlation_id is not None
         query = f"correlation={correlation_id}"

@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mailtrace"
-version = "0.2.0"
-description = "Trace an outbound email across application, Postfix, filtering, relays, and delivery events."
+version = "0.3.0"
+description = "Trace and explain outbound email flow across applications, Postfix, filters, queues, and relays."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Artur Panek" }]
-keywords = ["smtp", "postfix", "rspamd", "email", "observability", "debugging", "cli"]
+keywords = ["smtp", "postfix", "rspamd", "email", "observability", "debugging", "cli", "forensics"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
