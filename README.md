@@ -2,37 +2,55 @@
 
 **`strace` for an email moving through your mail stack.**
 
-`mailtrace` reconstructs the journey of an outbound message by correlating evidence from applications, Postfix, Rspamd, queue handoffs, and relays.
+`mailtrace` reconstructs and explains an outbound message by correlating evidence from applications, Postfix, Rspamd/milters, live queues, handoffs, and relays.
 
-It is intentionally not an email-header analyzer and not a monitoring daemon. Point it at logs when a message disappears and ask one question: **where did this mail go?**
+It is intentionally not an email-header analyzer and not an always-on monitoring daemon. Point it at evidence when a message disappears and ask one question: **where did this mail go?**
 
-> Early alpha. v0.2 focuses on local forensic correlation rather than always-on monitoring.
+> Early alpha. v0.3 is focused on local, evidence-driven mail forensics.
 
 > Origin story: this started during a rage-fix session after one SMTP invite path refused to explain where the mail was disappearing.
 
-## Example
+## The useful command
 
-```console
-$ mailtrace --journal --since '10 minutes ago' --message-id '<invite-123@example.net>'
-MAILTRACE
-query:        message-id=<invite-123@example.net>
-status:       sent
-queues:       0DC461ACD87
-message-ids:  invite-123@example.net
-
-2026-10-04T04:36:48.000+00:00  +     0ms  0DC461ACD87   postfix/cleanup      message-id=<invite-123@example.net>
-2026-10-04T04:36:48.500+00:00  +   500ms  0DC461ACD87   rspamd/filter        message-id=<invite-123@example.net>  action=no action
-2026-10-04T04:36:49.000+00:00  +  1000ms  0DC461ACD87   postfix/smtp         to=<tester@example.com>  relay=mx.example.com[203.0.113.10]:25  status=sent  dsn=2.0.0
-
-Assessment
-  outcome:    accepted-by-next-hop
-  last stage: postfix:smtp
-  confidence: high
-  Postfix recorded status=sent: the next SMTP/LMTP/local hop accepted the message.
-  Caveat: This is not proof that the message reached a recipient's inbox.
+```bash
+mailtrace explain \
+  --journal \
+  --since '20 minutes ago' \
+  --live-queue \
+  --message-id '<invite-123@example.net>'
 ```
 
-The assessment is evidence-based. If the supplied logs stop after the application, queue manager, or filter, `mailtrace` reports that boundary rather than pretending to know what happened next.
+Example:
+
+```text
+MAILTRACE EXPLAIN
+query:   message-id=<invite-123@example.net>
+status:  deferred
+
+Pipeline
+  [ok] APP      korpoappka/invite
+  [ok] POSTFIX  postfix/cleanup
+  [ok] FILTER   Rspamd: no action
+  [ok] QUEUE    queue 0DC461ACD87
+  [..] RELAY    deferred via gmail-smtp-in.l.google.com
+  [..] QUEUE    still present in deferred queue
+
+Latency  total observed: 2.14m
+  korpoappka:invite         -> postfix:cleanup              92ms
+  postfix:cleanup           -> rspamd:filter               34ms
+  rspamd:filter             -> postfix:qmgr                11ms
+  postfix:qmgr              -> postfix:smtp               842ms
+  postfix:smtp              -> postfix-queue:deferred      2.12m
+
+Assessment
+  outcome:    queued-for-retry
+  last stage: postfix-queue:deferred
+  confidence: high
+  Postfix deferred delivery and the message is still present in the live queue.
+  Caveat: Postfix can retry later according to its queue schedule.
+```
+
+The output is deliberately conservative. If the evidence ends, `mailtrace` says where it ends instead of inventing a failure.
 
 ## Install from source
 
@@ -46,124 +64,204 @@ python -m pip install -e .
 
 Python 3.11+ is required.
 
-## Usage
+## Commands
 
-### Read normal mail logs
+### Trace the full evidence timeline
 
-```bash
-mailtrace --file /var/log/mail.log --message-id '<3927a888@example.net>'
-```
-
-`--file` can be repeated. Each mail/syslog file is inspected for both Postfix and Rspamd events.
-
-### Read journald directly
+Legacy syntax remains supported:
 
 ```bash
-mailtrace --journal --since '10 minutes ago' --to tester@example.com
+mailtrace --journal --since '10 minutes ago' --message-id '<3927a888@example.net>'
 ```
 
-By default the journald reader asks for `postfix` and `rspamd`. Override the unit set with repeated `--unit` options:
+The explicit form is equivalent:
 
 ```bash
-mailtrace --journal \
-  --unit postfix \
-  --unit rspamd \
-  --since '30 minutes ago' \
-  --message-id '<3927a888@example.net>'
+mailtrace trace --journal --since '10 minutes ago' --message-id '<3927a888@example.net>'
 ```
+
+### Explain the pipeline
+
+```bash
+mailtrace explain --file /var/log/mail.log --queue 0DC461ACD87
+```
+
+This gives a compact pipeline, latency breakdown, and evidence-based assessment.
+
+### Inspect the current Postfix queue
+
+Add `postqueue -j` as live evidence:
+
+```bash
+mailtrace explain \
+  --journal \
+  --since '2 hours ago' \
+  --live-queue \
+  --queue 0DC461ACD87
+```
+
+Or analyze a saved queue snapshot:
+
+```bash
+postqueue -j > queue.jsonl
+mailtrace explain --queue-file queue.jsonl --queue 0DC461ACD87
+```
+
+If a deferred message still exists in the queue, the assessment can distinguish **old deferred evidence** from **currently queued for retry**.
 
 ### Correlate application/gateway events
 
-Custom services can emit a tiny JSONL event stream:
+Custom services can emit tiny JSONL events:
 
 ```json
 {"timestamp":"2026-10-04T04:36:47+00:00","source":"korpoappka","stage":"invite","kind":"submitted","correlation_id":"invite-42","message_id":"3927a888@example.net","recipient":"tester@example.com","status":"submitted","message":"alpha invite handed to mail gateway"}
 ```
 
-Trace it together with mail logs:
+Then:
 
 ```bash
-mailtrace \
+mailtrace explain \
   --events app-mail-events.jsonl \
-  --file /var/log/mail.log \
+  --journal \
+  --since '30 minutes ago' \
   --correlation-id invite-42
 ```
 
-Supported structured fields include:
+The strongest bridge is an application `correlation_id` plus a Message-ID or queue ID.
 
-- `timestamp` (required, ISO 8601)
-- `source`
-- `host`
-- `stage` or `component`
-- `kind`
-- `message`
-- `message_id`
-- `queue_id`
-- `linked_queue_id`
-- `correlation_id`
-- `sender` / `from`
-- `recipient` / `to`
-- `status`
-- `relay`
-- `details` (free-form JSON object)
-
-### Query by Postfix queue ID
+### Query by recipient
 
 ```bash
-mailtrace --file /var/log/mail.log --queue 0DC461ACD87
+mailtrace explain --journal --since today --to tester@example.com
 ```
 
-### Pipe logs
+Recipient lookup intentionally selects the **latest matching message** in the supplied evidence window before expanding by Message-ID/queue ID. It does not merge every email sent to that address.
+
+### Export JSON
 
 ```bash
-journalctl -u postfix -u rspamd --since '10 minutes ago' -o short-iso-precise | \
-  mailtrace --file - --to tester@example.com
+mailtrace explain --journal --since today --queue ABC123 --json
 ```
 
-### Machine-readable output
+JSON includes the assessment, pipeline, latency spans, identifiers, and raw normalized events.
+
+### Generate a self-contained HTML report
 
 ```bash
-mailtrace --journal --since today --message-id '<3927a888@example.net>' --json
+mailtrace explain \
+  --journal \
+  --since '30 minutes ago' \
+  --queue ABC123 \
+  --html mailtrace-report.html
 ```
 
-## What v0.2 understands
+The report contains no external JavaScript or assets.
 
-- classic Postfix syslog lines
-- ISO timestamps emitted by journald
-- direct journald collection
-- common syslog-wrapped Rspamd task logs
-- structured JSONL events from applications and gateways
-- Message-ID, queue-ID, `queued as`, and correlation-ID graph expansion
-- sender, recipient, relay, delay, DSN, filter action, and status extraction
-- evidence-based assessment of the last confirmed stage
-- human and JSON output
+### List parsers
 
-## What `status=sent` means
+```bash
+mailtrace parsers
+```
 
-Postfix `status=sent` means the configured next hop accepted the message. It does **not** prove that a provider placed the message in the user's inbox.
+Built-in parsers currently cover Postfix and Rspamd. Third-party packages can register parser adapters through the `mailtrace.parsers` Python entry-point group.
 
-`mailtrace` keeps that distinction explicit.
+See [docs/parser-plugins.md](docs/parser-plugins.md).
 
-## Design goals
+## Inputs
 
-1. **Forensic, not always-on.** No database or daemon is required.
-2. **Correlate evidence, do not invent it.** Missing evidence stays missing.
-3. **Composable.** Read files, stdin, journald, or structured application events.
-4. **Small enough to trust.** Parsers and correlation logic stay explicit and testable.
-5. **Useful during an incident.** The output should answer where the observable trace stops.
+`mailtrace` can combine all of these in one run:
 
-## Roadmap
+- classic syslog mail logs
+- ISO/journald-style syslog
+- RFC 5424 syslog
+- direct `journalctl` collection
+- Postfix `postqueue -j` snapshots
+- Rspamd task/proxy logs
+- Postfix milter reject/discard events
+- structured JSONL application/gateway events
+- external parser plugins
 
+## Correlation model
+
+The correlation graph expands through strong identifiers:
+
+```text
+correlation_id
+      │
+      ▼
+  Message-ID
+      │
+      ▼
+Postfix queue ID ─── queued as ─── next queue ID
+      │
+      ├────────────── Rspamd
+      │
+      ├────────────── live postqueue
+      │
+      └────────────── SMTP/LMTP/local delivery
+```
+
+Timestamp proximity alone is **not** a correlation key.
+
+See [docs/correlation.md](docs/correlation.md).
+
+## Evidence semantics
+
+A few distinctions are intentionally explicit:
+
+- Postfix `status=sent` means the configured next hop accepted the message.
+- It does **not** prove inbox placement.
+- A live queue entry proves the queue item exists at capture time, but not why delivery is delayed.
+- Missing events are an evidence boundary, not proof that a service failed.
+- An earlier `deferred` followed by a later `sent` is treated as successful next-hop acceptance.
+- Rspamd reject evidence and Postfix milter-reject evidence are reported separately.
+
+## Structured application events
+
+Applications and gateways can join the trace without a custom parser by writing JSON Lines.
+
+See [docs/structured-events.md](docs/structured-events.md).
+
+## Parser plugins
+
+A parser package can register an entry point:
+
+```toml
+[project.entry-points."mailtrace.parsers"]
+amavis = "mailtrace_amavis:parse"
+```
+
+The callable receives the same log lines as the built-in parsers and returns `mailtrace.model.Event` objects.
+
+Use `--no-plugins` when you want a run limited to built-in parsers.
+
+## What v0.3 ships
+
+- [x] Postfix trace correlation
+- [x] Message-ID and queue-ID handoffs
 - [x] direct journald input
 - [x] Rspamd correlation
+- [x] Postfix milter reject/discard evidence
 - [x] structured application/gateway events
-- [x] evidence-based trace assessment
-- [ ] richer Rspamd/milter log variants
-- [ ] RFC 5424 syslog support
-- [ ] per-stage latency breakdown
-- [ ] Postfix queue inspection for currently queued mail
-- [ ] pluggable parser adapters
-- [ ] optional HTML trace report
+- [x] RFC 5424 ingestion
+- [x] live Postfix queue inspection
+- [x] per-event latency breakdown
+- [x] compact `mailtrace explain` pipeline
+- [x] evidence-based assessment
+- [x] parser plugin entry points
+- [x] JSON output
+- [x] self-contained HTML reports
+
+## Next
+
+Useful extensions that still fit the project:
+
+- Exim/OpenSMTPD adapters
+- DSN/bounce-message ingestion
+- better queue-age and retry-schedule explanation
+- optional Graphviz/DOT export
+- sanitized diagnostic bundles for sharing traces
+- more real-world Rspamd/milter fixtures
 
 ## Development
 
