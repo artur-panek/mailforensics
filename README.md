@@ -35,7 +35,7 @@ Pipeline
   [ok] FILTER   Rspamd: no action
   [ok] QUEUE    queue 0DC461ACD87
   [..] RELAY    deferred via gmail-smtp-in.l.google.com
-  [..] QUEUE    still present in deferred queue
+  [..] QUEUE NOW still present in deferred queue
 
 Latency  total observed: 2.14m
   korpoappka:invite         -> postfix:cleanup              92ms
