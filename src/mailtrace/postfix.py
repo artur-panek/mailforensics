@@ -3,9 +3,12 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from datetime import datetime
-from email.utils import parsedate_to_datetime
 
-from .model import Event, Trace
+from .model import Event
+from .timeparse import parse_classic_syslog, parse_iso_timestamp
+from .trace import find_trace as find_trace
+
+__all__ = ["find_trace", "parse_postfix"]
 
 CLASSIC_SYSLOG_RE = re.compile(
     r"^(?P<month>[A-Z][a-z]{2})\s+(?P<day>\d{1,2})\s+"
@@ -13,8 +16,9 @@ CLASSIC_SYSLOG_RE = re.compile(
     r"(?P<process>postfix/[A-Za-z0-9_-]+)\[(?P<pid>\d+)\]:\s+(?P<body>.*)$"
 )
 ISO_SYSLOG_RE = re.compile(
-    r"^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)\s+"
-    r"(?P<host>\S+)\s+(?P<process>postfix/[A-Za-z0-9_-]+)\[(?P<pid>\d+)\]:\s+(?P<body>.*)$"
+    r"^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?"
+    r"(?:Z|[+-]\d{2}:?\d{2})?)\s+(?P<host>\S+)\s+"
+    r"(?P<process>postfix/[A-Za-z0-9_-]+)\[(?P<pid>\d+)\]:\s+(?P<body>.*)$"
 )
 QUEUE_RE = re.compile(r"^(?P<queue>[A-Za-z0-9]+|NOQUEUE):\s+(?P<detail>.*)$")
 MESSAGE_ID_RE = re.compile(r"message-id=<(?P<value>[^>]+)>", re.IGNORECASE)
@@ -30,17 +34,16 @@ QUEUED_AS_RE = re.compile(r"queued as (?P<value>[A-Za-z0-9]+)", re.IGNORECASE)
 def _parse_timestamp(line: str, year: int) -> tuple[datetime, dict[str, str]] | None:
     iso_match = ISO_SYSLOG_RE.match(line)
     if iso_match:
-        raw = iso_match.group("timestamp").replace("Z", "+00:00")
-        return datetime.fromisoformat(raw), iso_match.groupdict()
+        return parse_iso_timestamp(iso_match.group("timestamp")), iso_match.groupdict()
 
     classic_match = CLASSIC_SYSLOG_RE.match(line)
     if not classic_match:
         return None
     data = classic_match.groupdict()
-    stamp = parsedate_to_datetime(
-        f"{data['month']} {data['day']} {data['time']} {year}"
-    ).replace(tzinfo=None)
-    return stamp, data
+    return (
+        parse_classic_syslog(data["month"], data["day"], data["time"], year),
+        data,
+    )
 
 
 def _kind_for(component: str, detail: str, details: dict[str, str]) -> str:
@@ -75,7 +78,8 @@ def parse_postfix(lines: Iterable[str], *, year: int | None = None) -> list[Even
         if not queue_match:
             continue
 
-        queue_id = queue_match.group("queue")
+        raw_queue_id = queue_match.group("queue")
+        queue_id = None if raw_queue_id == "NOQUEUE" else raw_queue_id.upper()
         detail = queue_match.group("detail")
         component = data["process"].split("/", 1)[1]
         details: dict[str, str] = {}
@@ -93,11 +97,15 @@ def parse_postfix(lines: Iterable[str], *, year: int | None = None) -> list[Even
         for key, pattern in extractors.items():
             match = pattern.search(detail)
             if match:
-                details[key] = match.group("value")
+                value = match.group("value")
+                if key == "linked_queue_id":
+                    value = value.upper()
+                details[key] = value
 
         events.append(
             Event(
                 timestamp=timestamp,
+                source="postfix",
                 host=data["host"],
                 component=component,
                 queue_id=queue_id,
@@ -109,58 +117,3 @@ def parse_postfix(lines: Iterable[str], *, year: int | None = None) -> list[Even
         )
 
     return sorted(events, key=lambda event: event.timestamp)
-
-
-def _expand_linked_queue_ids(events: list[Event], queue_ids: set[str]) -> set[str]:
-    expanded = set(queue_ids)
-    changed = True
-    while changed:
-        changed = False
-        for event in events:
-            linked = event.details.get("linked_queue_id")
-            if event.queue_id in expanded and linked and linked not in expanded:
-                expanded.add(linked)
-                changed = True
-            if linked in expanded and event.queue_id not in expanded:
-                expanded.add(event.queue_id)
-                changed = True
-    return expanded
-
-
-def find_trace(
-    events: list[Event],
-    *,
-    message_id: str | None = None,
-    queue_id: str | None = None,
-    recipient: str | None = None,
-) -> Trace:
-    selectors = [value is not None for value in (message_id, queue_id, recipient)]
-    if sum(selectors) != 1:
-        raise ValueError("exactly one of message_id, queue_id, or recipient must be provided")
-
-    selected: set[str] = set()
-    query: str
-
-    if message_id is not None:
-        normalized = message_id.strip("<>")
-        query = f"message-id=<{normalized}>"
-        selected = {
-            event.queue_id
-            for event in events
-            if event.details.get("message_id", "").strip("<>") == normalized
-        }
-    elif queue_id is not None:
-        query = f"queue={queue_id}"
-        selected = {queue_id}
-    else:
-        assert recipient is not None
-        query = f"to=<{recipient}>"
-        selected = {
-            event.queue_id
-            for event in events
-            if event.details.get("recipient", "").casefold() == recipient.casefold()
-        }
-
-    selected = _expand_linked_queue_ids(events, selected)
-    trace_events = [event for event in events if event.queue_id in selected]
-    return Trace(events=trace_events, queue_ids=selected, query=query)
