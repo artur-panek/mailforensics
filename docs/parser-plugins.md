@@ -1,9 +1,9 @@
 # Parser plugins
 
-`mailtrace` can load external log parsers from the Python entry-point group:
+`mailforensics` can load external log parsers from the Python entry-point group:
 
 ```text
-mailtrace.parsers
+mailforensics.parsers
 ```
 
 This is intended for MTAs, filters, gateways, or organization-specific log formats that do not belong in the core package.
@@ -13,7 +13,7 @@ This is intended for MTAs, filters, gateways, or organization-specific log forma
 ```python
 from collections.abc import Iterable
 
-from mailtrace.model import Event
+from mailforensics.model import Event
 
 
 def parse(lines: Iterable[str], *, year: int | None = None) -> list[Event]:
@@ -34,20 +34,20 @@ def parse(lines: Iterable[str], *, year: int | None = None) -> list[Event]:
 Register it in the plugin package:
 
 ```toml
-[project.entry-points."mailtrace.parsers"]
-my-gateway = "my_mailtrace_plugin:parse"
+[project.entry-points."mailforensics.parsers"]
+my-gateway = "my_mailforensics_plugin:parse"
 ```
 
 After installation:
 
 ```bash
-mailtrace parsers
+mailforensics parsers
 ```
 
 should show:
 
 ```text
-mailtrace parsers
+mailforensics parsers
   postfix              builtin
   rspamd               builtin
   my-gateway           plugin
@@ -59,7 +59,7 @@ A parser callable must:
 
 1. accept an iterable of text lines as its first argument;
 2. accept the keyword argument `year`;
-3. return an iterable of `mailtrace.model.Event` objects;
+3. return an iterable of `mailforensics.model.Event` objects;
 4. ignore lines it does not recognize;
 5. avoid deriving identifiers from timestamp proximity or other weak guesses.
 
@@ -78,16 +78,16 @@ A plugin should only emit identifiers that are explicitly supported by the sourc
 
 ## Failure behavior
 
-If a discovered plugin cannot be imported, is not callable, raises while parsing, or returns non-`Event` values, `mailtrace` fails the run with a parser error instead of silently dropping evidence.
+If a discovered plugin cannot be imported, is not callable, raises while parsing, or returns non-`Event` values, `mailforensics` fails the run with a parser error instead of silently dropping evidence.
 
 Use:
 
 ```bash
-mailtrace explain --no-plugins ...
+mailforensics explain --no-plugins ...
 ```
 
 to restrict a forensic run to the built-in parsers.
 
 ## Compatibility
 
-The plugin API is still alpha. Plugins should pin an appropriate `mailtrace` version until the Event model reaches a stable compatibility guarantee.
+The plugin API is still alpha. Plugins should pin an appropriate `mailforensics` version until the Event model reaches a stable compatibility guarantee.

@@ -1,0 +1,2 @@
+#compdef mailforensics
+eval "$(mailforensics completion zsh)"

@@ -1,2 +1,0 @@
-#compdef mailtrace
-eval "$(mailtrace completion zsh)"

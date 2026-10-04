@@ -1,6 +1,6 @@
 # Structured application events
 
-Applications and custom mail gateways can participate in `mailtrace` without a bespoke parser by emitting JSON Lines.
+Applications and custom mail gateways can participate in `mailforensics` without a bespoke parser by emitting JSON Lines.
 
 Each line is one JSON object.
 
