@@ -1,14 +1,14 @@
-# mailtrace
+# MailForensics
 
 **`strace` for an email moving through your mail stack.**
 
-By [Artur Panek](https://artur.panek.tech/) · [Project page](https://artur.panek.tech/work/mailtrace/)
+By [Artur Panek](https://artur.panek.tech/) · [Project page](https://artur.panek.tech/work/mailforensics/)
 
-`mailtrace` reconstructs and explains an outbound message by correlating evidence from applications, Postfix, Rspamd/milters, live queues, handoffs, and relays.
+`mailforensics` reconstructs and explains an outbound message by correlating evidence from applications, Postfix, Rspamd/milters, live queues, handoffs, and relays.
 
 It is intentionally not an email-header analyzer and not an always-on monitoring daemon. Point it at evidence when a message disappears and ask one question: **where did this mail go?**
 
-> Early alpha. v0.3 is focused on local, evidence-driven mail forensics.
+> Early alpha. v0.5.0 is focused on local, evidence-driven mail forensics.
 
 > Origin story: this started during a rage-fix session after one SMTP invite path refused to explain where the mail was disappearing.
 
@@ -18,9 +18,9 @@ It is intentionally not an email-header analyzer and not an always-on monitoring
 The full banner appears in root help and demos, not on every normal trace:
 
 ```text
-      ╭──────────────╮
-──────┤  MAILTRACE   ├──────▶
-      ╰──────────────╯
+      ╭──────────────────╮
+──────┤  MAILFORENSICS   ├──────▶
+      ╰──────────────────╯
           trace the evidence,
           not the guess.
 ```
@@ -30,7 +30,7 @@ Interactive output uses terminal color only when appropriate. `NO_COLOR` is resp
 ## The useful command
 
 ```bash
-mailtrace explain \
+mailforensics explain \
   --journal \
   --since '20 minutes ago' \
   --live-queue \
@@ -40,7 +40,7 @@ mailtrace explain \
 Example:
 
 ```text
-MAILTRACE EXPLAIN
+MAILFORENSICS EXPLAIN
 query:   message-id=<invite-123@example.net>
 status:  deferred
 
@@ -77,13 +77,32 @@ Assessment
   Caveat: Postfix can retry later according to its queue schedule.
 ```
 
-The output is deliberately conservative. If the evidence ends, `mailtrace` says where it ends instead of inventing a failure.
+The output is deliberately conservative. If the evidence ends, `mailforensics` says where it ends instead of inventing a failure.
 
-## Install from source
+## Install
+
+### PyPI
+
+Once v0.5.0 is published:
 
 ```bash
-git clone https://github.com/artur-panek/mailtrace.git
-cd mailtrace
+python -m pip install mailforensics
+```
+
+Then:
+
+```bash
+mailforensics demo
+mailforensics doctor
+```
+
+### From source
+
+Until the first PyPI release, install directly from GitHub:
+
+```bash
+git clone https://github.com/artur-panek/mailforensics.git
+cd mailforensics
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
@@ -94,10 +113,10 @@ Python 3.11+ is required.
 ## Zero-setup demo
 
 ```bash
-mailtrace demo
-mailtrace demo delivered
-mailtrace demo rejected
-mailtrace demo gap
+mailforensics demo
+mailforensics demo delivered
+mailforensics demo rejected
+mailforensics demo gap
 ```
 
 The default demo is a deferred message still visible in the live queue. It requires no Postfix installation or log files, which makes it useful for evaluating the project from a fresh clone.
@@ -105,7 +124,7 @@ The default demo is a deferred message still visible in the live queue. It requi
 ## Environment doctor
 
 ```bash
-mailtrace doctor
+mailforensics doctor
 ```
 
 The doctor checks Python, `journalctl`, journal readability, `postqueue`, queue access, default mail logs, and parser plugins. Missing optional local capabilities are warnings rather than fake failures.
@@ -115,9 +134,9 @@ The doctor checks Python, `journalctl`, journal readability, `postqueue`, queue 
 Print a completion script:
 
 ```bash
-mailtrace completion bash
-mailtrace completion zsh
-mailtrace completion fish
+mailforensics completion bash
+mailforensics completion zsh
+mailforensics completion fish
 ```
 
 Repository convenience stubs also live under `completions/`.
@@ -134,7 +153,7 @@ Four small evidence sets live under `examples/fixtures/`:
 For example:
 
 ```bash
-mailtrace explain \
+mailforensics explain \
   --file examples/fixtures/deferred/mail.log \
   --queue-file examples/fixtures/deferred/queue.jsonl \
   --queue 0DC461ACD87
@@ -153,19 +172,19 @@ mailtrace explain \
 Legacy syntax remains supported:
 
 ```bash
-mailtrace --journal --since '10 minutes ago' --message-id '<3927a888@example.net>'
+mailforensics --journal --since '10 minutes ago' --message-id '<3927a888@example.net>'
 ```
 
 The explicit form is equivalent:
 
 ```bash
-mailtrace trace --journal --since '10 minutes ago' --message-id '<3927a888@example.net>'
+mailforensics trace --journal --since '10 minutes ago' --message-id '<3927a888@example.net>'
 ```
 
 ### Explain the pipeline
 
 ```bash
-mailtrace explain --file /var/log/mail.log --queue 0DC461ACD87
+mailforensics explain --file /var/log/mail.log --queue 0DC461ACD87
 ```
 
 This gives a compact pipeline, latency breakdown, and evidence-based assessment.
@@ -175,7 +194,7 @@ This gives a compact pipeline, latency breakdown, and evidence-based assessment.
 Add `postqueue -j` as live evidence:
 
 ```bash
-mailtrace explain \
+mailforensics explain \
   --journal \
   --since '2 hours ago' \
   --live-queue \
@@ -186,7 +205,7 @@ Or analyze a saved queue snapshot:
 
 ```bash
 postqueue -j > queue.jsonl
-mailtrace explain --queue-file queue.jsonl --queue 0DC461ACD87
+mailforensics explain --queue-file queue.jsonl --queue 0DC461ACD87
 ```
 
 If a deferred message still exists in the queue, the assessment can distinguish **old deferred evidence** from **currently queued for retry**.
@@ -202,7 +221,7 @@ Custom services can emit tiny JSONL events:
 Then:
 
 ```bash
-mailtrace explain \
+mailforensics explain \
   --events app-mail-events.jsonl \
   --journal \
   --since '30 minutes ago' \
@@ -214,7 +233,7 @@ The strongest bridge is an application `correlation_id` plus a Message-ID or que
 ### Query by recipient
 
 ```bash
-mailtrace explain --journal --since today --to tester@example.com
+mailforensics explain --journal --since today --to tester@example.com
 ```
 
 Recipient lookup intentionally selects the **latest matching message** in the supplied evidence window before expanding by Message-ID/queue ID. It does not merge every email sent to that address.
@@ -222,7 +241,7 @@ Recipient lookup intentionally selects the **latest matching message** in the su
 ### Export JSON
 
 ```bash
-mailtrace explain --journal --since today --queue ABC123 --json
+mailforensics explain --journal --since today --queue ABC123 --json
 ```
 
 JSON includes the assessment, pipeline, latency spans, identifiers, and raw normalized events.
@@ -230,11 +249,11 @@ JSON includes the assessment, pipeline, latency spans, identifiers, and raw norm
 ### Generate a self-contained HTML report
 
 ```bash
-mailtrace explain \
+mailforensics explain \
   --journal \
   --since '30 minutes ago' \
   --queue ABC123 \
-  --html mailtrace-report.html
+  --html mailforensics-report.html
 ```
 
 The report contains no external JavaScript or assets.
@@ -242,16 +261,16 @@ The report contains no external JavaScript or assets.
 ### List parsers
 
 ```bash
-mailtrace parsers
+mailforensics parsers
 ```
 
-Built-in parsers currently cover Postfix and Rspamd. Third-party packages can register parser adapters through the `mailtrace.parsers` Python entry-point group.
+Built-in parsers currently cover Postfix and Rspamd. Third-party packages can register parser adapters through the `mailforensics.parsers` Python entry-point group.
 
 See [docs/parser-plugins.md](docs/parser-plugins.md).
 
 ## Inputs
 
-`mailtrace` can combine all of these in one run:
+`mailforensics` can combine all of these in one run:
 
 - classic syslog mail logs
 - ISO/journald-style syslog
@@ -309,15 +328,15 @@ See [docs/structured-events.md](docs/structured-events.md).
 A parser package can register an entry point:
 
 ```toml
-[project.entry-points."mailtrace.parsers"]
-amavis = "mailtrace_amavis:parse"
+[project.entry-points."mailforensics.parsers"]
+amavis = "mailforensics_amavis:parse"
 ```
 
-The callable receives the same log lines as the built-in parsers and returns `mailtrace.model.Event` objects.
+The callable receives the same log lines as the built-in parsers and returns `mailforensics.model.Event` objects.
 
 Use `--no-plugins` when you want a run limited to built-in parsers.
 
-## What v0.3 ships
+## What v0.5 ships
 
 - [x] Postfix trace correlation
 - [x] Message-ID and queue-ID handoffs
@@ -328,7 +347,7 @@ Use `--no-plugins` when you want a run limited to built-in parsers.
 - [x] RFC 5424 ingestion
 - [x] live Postfix queue inspection
 - [x] per-event latency breakdown
-- [x] compact `mailtrace explain` pipeline
+- [x] compact `mailforensics explain` pipeline
 - [x] evidence-based assessment
 - [x] parser plugin entry points
 - [x] JSON output

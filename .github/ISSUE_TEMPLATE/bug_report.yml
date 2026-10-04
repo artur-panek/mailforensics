@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible parsing, correlation, packaging, or CLI problem
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please sanitize logs before posting them. Remove credentials, personal addresses, private domains/IPs, message content, and identifiers you do not want public.
+  - type: input
+    id: version
+    attributes:
+      label: MailForensics version
+      placeholder: "mailforensics --version"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Ubuntu 24.04, Python 3.12, Postfix 3.x"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The sanitized command that reproduces the issue.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: mailforensics doctor
+      description: Paste sanitized output when relevant.
+      render: text
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Minimal sanitized evidence
+      description: Include the smallest log/JSONL fixture that reproduces the problem.
+      render: text

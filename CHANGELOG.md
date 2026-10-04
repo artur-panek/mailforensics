@@ -1,13 +1,22 @@
 # Changelog
 
+## 0.5.0
+
+- rename the project, Python package, and CLI from `mailtrace` to `mailforensics` before the first PyPI release
+- establish a distinct identity from the existing SiriusKoan/mailtrace project
+- prepare secretless PyPI Trusted Publishing through GitHub Actions OIDC
+- add package build validation and clean-wheel smoke testing
+- add contribution and issue-reporting workflows
+
+
 ## 0.4.0
 
 - add forensic ASCII/Unicode console identity
 - add auto color with `NO_COLOR` support and explicit `--color`
 - add `--ascii` fallback for terminal graphics
 - render explain pipelines as vertical forensic trees with per-hop timing
-- add `mailtrace demo` with deferred, delivered, rejected, and evidence-gap scenarios
-- add `mailtrace doctor` environment checks
+- add `mailforensics demo` with deferred, delivered, rejected, and evidence-gap scenarios
+- add `mailforensics doctor` environment checks
 - add Bash, Zsh, and Fish completion generation
 - add delivered/deferred/rejected/gap fixtures for zero-setup testing
 - document stable exit codes and terminal behavior
@@ -15,7 +24,7 @@
 
 ## 0.3.0
 
-- add `mailtrace explain` pipeline view
+- add `mailforensics explain` pipeline view
 - add live Postfix queue evidence via `postqueue -j`
 - add offline queue snapshot ingestion
 - add latency spans and observed-duration reporting

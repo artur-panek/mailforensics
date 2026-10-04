@@ -1,6 +1,6 @@
 # Correlation model
 
-`mailtrace` treats logs as evidence and correlates events by identifiers rather than by timestamp proximity alone.
+`mailforensics` treats logs as evidence and correlates events by identifiers rather than by timestamp proximity alone.
 
 ## Identifiers
 

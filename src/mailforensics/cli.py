@@ -27,27 +27,27 @@ def _root_help() -> str:
     logo = banner(ascii_only=ascii_only)
     return f"""{logo}
 
-mailtrace {__version__} — strace for an email moving through your mail stack
+mailforensics {__version__} — strace for an email moving through your mail stack
 
 Usage:
-  mailtrace [trace] QUERY [SOURCES] [OPTIONS]
-  mailtrace explain QUERY [SOURCES] [OPTIONS]
-  mailtrace demo [deferred|delivered|rejected|gap]
-  mailtrace doctor
-  mailtrace parsers
-  mailtrace completion [bash|zsh|fish]
+  mailforensics [trace] QUERY [SOURCES] [OPTIONS]
+  mailforensics explain QUERY [SOURCES] [OPTIONS]
+  mailforensics demo [deferred|delivered|rejected|gap]
+  mailforensics doctor
+  mailforensics parsers
+  mailforensics completion [bash|zsh|fish]
 
 Commands:
   trace       full normalized evidence timeline (default)
   explain     compact forensic pipeline + latency + assessment
   demo        zero-setup built-in scenarios
-  doctor      inspect local mailtrace capabilities and permissions
+  doctor      inspect local mailforensics capabilities and permissions
   parsers     list built-in and external parser adapters
   completion  print a shell completion script
 
 Quick start:
-  mailtrace demo
-  mailtrace explain --journal --since '20 minutes ago' --live-queue --message-id '<id@example.net>'
+  mailforensics demo
+  mailforensics explain --journal --since '20 minutes ago' --live-queue --message-id '<id@example.net>'
 
 Output:
   color is auto-detected; NO_COLOR disables it
@@ -116,16 +116,16 @@ def _list_parsers() -> int:
     try:
         adapters = [*builtin_adapters(), *discover_adapters()]
     except ParserError as exc:
-        print(f"mailtrace: {exc}", file=sys.stderr)
+        print(f"mailforensics: {exc}", file=sys.stderr)
         return ERROR
-    print("mailtrace parsers")
+    print("mailforensics parsers")
     for adapter in adapters:
         print(f"  {adapter.name:<20} {'plugin' if adapter.external else 'builtin'}")
     return OK
 
 
 def _run_demo(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="mailtrace demo", description="Run mailtrace with built-in forensic evidence.")
+    parser = argparse.ArgumentParser(prog="mailforensics demo", description="Run mailforensics with built-in forensic evidence.")
     parser.add_argument("scenario", nargs="?", choices=SCENARIOS, default="deferred")
     parser.add_argument("--color", choices=("auto", "always", "never"), default="auto")
     parser.add_argument("--ascii", action="store_true")
@@ -137,12 +137,12 @@ def _run_demo(argv: list[str]) -> int:
     print(render_explain(demo_trace(args.scenario), color=color, ascii_only=ascii_only))
     print()
     separator = " - " if ascii_only else " · "
-    print(f"scenario: {args.scenario}{separator}try: mailtrace demo delivered")
+    print(f"scenario: {args.scenario}{separator}try: mailforensics demo delivered")
     return OK
 
 
 def _run_doctor(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(prog="mailtrace doctor", description="Check local mailtrace capabilities.")
+    parser = argparse.ArgumentParser(prog="mailforensics doctor", description="Check local mailforensics capabilities.")
     parser.add_argument("--color", choices=("auto", "always", "never"), default="auto")
     parser.add_argument("--ascii", action="store_true")
     args = parser.parse_args(argv)
@@ -158,7 +158,7 @@ def _run_doctor(argv: list[str]) -> int:
         icon = state(icons[check.state], tones[check.state], enabled=color)
         print(f"  {icon} {check.name:<18} {check.detail}")
     print()
-    print("Warnings are optional capabilities; failures mean mailtrace itself is unhealthy.")
+    print("Warnings are optional capabilities; failures mean mailforensics itself is unhealthy.")
     return NO_TRACE if has_failures(checks) else OK
 
 
@@ -178,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     mode, command_argv = _split_mode(raw)
     if mode == "parsers":
         if command_argv:
-            print("mailtrace: parsers takes no arguments", file=sys.stderr)
+            print("mailforensics: parsers takes no arguments", file=sys.stderr)
             return ERROR
         return _list_parsers()
     if mode == "demo":
@@ -186,15 +186,15 @@ def main(argv: list[str] | None = None) -> int:
     if mode == "doctor":
         return _run_doctor(command_argv)
     if mode == "completion":
-        parser = argparse.ArgumentParser(prog="mailtrace completion")
+        parser = argparse.ArgumentParser(prog="mailforensics completion")
         parser.add_argument("shell", choices=SHELLS)
         args = parser.parse_args(command_argv)
         print(completion_script(args.shell), end="")
         return OK
 
-    args = _build_parser(prog=f"mailtrace {mode}" if mode != "trace" else "mailtrace").parse_args(command_argv)
+    args = _build_parser(prog=f"mailforensics {mode}" if mode != "trace" else "mailforensics").parse_args(command_argv)
     if (args.since or args.until or args.unit) and not args.journal:
-        print("mailtrace: --since/--until/--unit require --journal", file=sys.stderr)
+        print("mailforensics: --since/--until/--unit require --journal", file=sys.stderr)
         return ERROR
 
     try:
@@ -221,7 +221,7 @@ def main(argv: list[str] | None = None) -> int:
             correlation_id=args.correlation_id,
         )
     except (JournalError, OSError, ParserError, QueueError, ValueError) as exc:
-        print(f"mailtrace: {exc}", file=sys.stderr)
+        print(f"mailforensics: {exc}", file=sys.stderr)
         return ERROR
 
     if args.html:
