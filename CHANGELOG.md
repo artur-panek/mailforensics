@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1
+
+- rewrite the public README around installation, evidence sources, commands, and correlation semantics
+- make PyPI installation the default quick-start path
+- simplify the forensic branding presentation and public examples
+- remove development-history framing from the main project page
+- keep functionality unchanged from 0.5.0
+
 ## 0.5.0
 
 - rename the project from `mailtrace` to **MailForensics** and the Python package/CLI to `mailforensics` before the first PyPI release
