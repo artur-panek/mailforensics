@@ -45,12 +45,22 @@ query:   message-id=<invite-123@example.net>
 status:  deferred
 
 Pipeline
-  [ok] APP      korpoappka/invite
-  [ok] POSTFIX  postfix/cleanup
-  [ok] FILTER   Rspamd: no action
-  [ok] QUEUE    queue 0DC461ACD87
-  [..] RELAY    deferred via gmail-smtp-in.l.google.com
-  [..] QUEUE NOW still present in deferred queue
+  ● APP       korpoappka/invite
+  │ 92ms
+  ▼
+  ● POSTFIX   postfix/cleanup
+  │ 34ms
+  ▼
+  ● FILTER    Rspamd: no action
+  │ 11ms
+  ▼
+  ● QUEUE     queue 0DC461ACD87
+  │ 842ms
+  ▼
+  ◐ RELAY     deferred via gmail-smtp-in.l.google.com
+  │ 2.12m
+  ▼
+  ◐ QUEUE NOW still present in deferred queue
 
 Latency  total observed: 2.14m
   korpoappka:invite         -> postfix:cleanup              92ms
