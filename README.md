@@ -36,6 +36,8 @@ See the tool without needing a mail server:
 mailforensics demo
 ```
 
+![MailForensics demo showing a deferred message traced through application, Postfix, Rspamd, relay, and live queue state](https://raw.githubusercontent.com/artur-panek/mailforensics/main/docs/assets/mailforensics-demo.webp)
+
 Or inspect the local environment:
 
 ```bash
