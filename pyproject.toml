@@ -28,6 +28,7 @@ Homepage = "https://artur.panek.tech/work/mailforensics/"
 Repository = "https://github.com/artur-panek/mailforensics"
 Issues = "https://github.com/artur-panek/mailforensics/issues"
 Changelog = "https://github.com/artur-panek/mailforensics/blob/main/CHANGELOG.md"
+Releases = "https://github.com/artur-panek/mailforensics/releases"
 
 [project.scripts]
 mailforensics = "mailforensics.cli:main"
