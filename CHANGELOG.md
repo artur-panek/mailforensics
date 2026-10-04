@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+- add forensic ASCII/Unicode console identity
+- add auto color with `NO_COLOR` support and explicit `--color`
+- add `--ascii` fallback for terminal graphics
+- render explain pipelines as vertical forensic trees with per-hop timing
+- add `mailtrace demo` with deferred, delivered, rejected, and evidence-gap scenarios
+- add `mailtrace doctor` environment checks
+- add Bash, Zsh, and Fish completion generation
+- add delivered/deferred/rejected/gap fixtures for zero-setup testing
+- document stable exit codes and terminal behavior
+
+
 ## 0.3.0
 
 - add `mailtrace explain` pipeline view

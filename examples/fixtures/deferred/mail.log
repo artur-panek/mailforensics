@@ -1,0 +1,4 @@
+2026-10-04T12:00:00.092+00:00 gateway postfix/cleanup[1200]: 0DC461ACD87: message-id=<invite-123@example.net>
+2026-10-04T12:00:00.126+00:00 gateway rspamd[2200]: <abc>; task; rspamd_task_write_log: id: <invite-123@example.net>, qid: <0DC461ACD87>, (default: T (no action): [1.20/15.00])
+2026-10-04T12:00:00.137+00:00 gateway postfix/qmgr[1201]: 0DC461ACD87: from=<app@example.net>, size=1184, nrcpt=1 (queue active)
+2026-10-04T12:00:00.979+00:00 gateway postfix/smtp[1202]: 0DC461ACD87: to=<tester@example.com>, relay=mx.example.net[203.0.113.10]:25, delay=0.842, dsn=4.4.1, status=deferred (connect timed out)

@@ -12,6 +12,21 @@ It is intentionally not an email-header analyzer and not an always-on monitoring
 
 > Origin story: this started during a rage-fix session after one SMTP invite path refused to explain where the mail was disappearing.
 
+
+## Forensic terminal identity
+
+The full banner appears in root help and demos, not on every normal trace:
+
+```text
+      ╭──────────────╮
+──────┤  MAILTRACE   ├──────▶
+      ╰──────────────╯
+          trace the evidence,
+          not the guess.
+```
+
+Interactive output uses terminal color only when appropriate. `NO_COLOR` is respected, and `--color auto|always|never` plus `--ascii` make the behavior explicit.
+
 ## The useful command
 
 ```bash
@@ -30,12 +45,22 @@ query:   message-id=<invite-123@example.net>
 status:  deferred
 
 Pipeline
-  [ok] APP      korpoappka/invite
-  [ok] POSTFIX  postfix/cleanup
-  [ok] FILTER   Rspamd: no action
-  [ok] QUEUE    queue 0DC461ACD87
-  [..] RELAY    deferred via gmail-smtp-in.l.google.com
-  [..] QUEUE NOW still present in deferred queue
+  ● APP       korpoappka/invite
+  │ 92ms
+  ▼
+  ● POSTFIX   postfix/cleanup
+  │ 34ms
+  ▼
+  ● FILTER    Rspamd: no action
+  │ 11ms
+  ▼
+  ● QUEUE     queue 0DC461ACD87
+  │ 842ms
+  ▼
+  ◐ RELAY     deferred via gmail-smtp-in.l.google.com
+  │ 2.12m
+  ▼
+  ◐ QUEUE NOW still present in deferred queue
 
 Latency  total observed: 2.14m
   korpoappka:invite         -> postfix:cleanup              92ms
@@ -65,6 +90,61 @@ python -m pip install -e .
 ```
 
 Python 3.11+ is required.
+
+## Zero-setup demo
+
+```bash
+mailtrace demo
+mailtrace demo delivered
+mailtrace demo rejected
+mailtrace demo gap
+```
+
+The default demo is a deferred message still visible in the live queue. It requires no Postfix installation or log files, which makes it useful for evaluating the project from a fresh clone.
+
+## Environment doctor
+
+```bash
+mailtrace doctor
+```
+
+The doctor checks Python, `journalctl`, journal readability, `postqueue`, queue access, default mail logs, and parser plugins. Missing optional local capabilities are warnings rather than fake failures.
+
+## Shell completion
+
+Print a completion script:
+
+```bash
+mailtrace completion bash
+mailtrace completion zsh
+mailtrace completion fish
+```
+
+Repository convenience stubs also live under `completions/`.
+
+## Example fixtures
+
+Four small evidence sets live under `examples/fixtures/`:
+
+- `delivered/`
+- `deferred/`
+- `rejected/`
+- `gap/`
+
+For example:
+
+```bash
+mailtrace explain \
+  --file examples/fixtures/deferred/mail.log \
+  --queue-file examples/fixtures/deferred/queue.jsonl \
+  --queue 0DC461ACD87
+```
+
+## Exit codes
+
+- `0`: trace found / command succeeded
+- `1`: no matching trace, or doctor found a hard failure
+- `2`: invocation or runtime error
 
 ## Commands
 
