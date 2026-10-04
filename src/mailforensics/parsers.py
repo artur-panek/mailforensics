@@ -9,7 +9,7 @@ from .postfix import parse_postfix
 from .rspamd import parse_rspamd
 
 ParserFn = Callable[..., Iterable[Event]]
-ENTRY_POINT_GROUP = "mailtrace.parsers"
+ENTRY_POINT_GROUP = "mailforensics.parsers"
 
 
 class ParserError(RuntimeError):

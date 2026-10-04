@@ -136,7 +136,7 @@ def _pipeline_lines(
 
 def render_text(trace: Trace, *, color: bool = False) -> str:
     lines = [
-        bold("MAILTRACE", enabled=color),
+        bold("MAILFORENSICS", enabled=color),
         f"query:        {trace.query}",
         f"status:       {trace.status}",
         f"queues:       {', '.join(sorted(trace.queue_ids)) or '-'}",
@@ -175,7 +175,7 @@ def render_explain(
     ascii_only: bool = False,
 ) -> str:
     lines = [
-        bold("MAILTRACE EXPLAIN", enabled=color),
+        bold("MAILFORENSICS EXPLAIN", enabled=color),
         f"query:   {trace.query}",
         f"status:  {trace.status}",
         "",
