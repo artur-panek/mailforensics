@@ -1,5 +1,5 @@
-from mailtrace.postfix import parse_postfix
-from mailtrace.trace import find_trace
+from mailforensics.postfix import parse_postfix
+from mailforensics.trace import find_trace
 
 LOG = """\
 Oct  4 04:36:48 gateway postfix/cleanup[1200]: 0DC461ACD87: message-id=<invite-123@sidelobe.dev>

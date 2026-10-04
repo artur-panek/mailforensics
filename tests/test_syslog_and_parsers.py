@@ -1,7 +1,7 @@
-from mailtrace.parsers import parse_log_lines
-from mailtrace.postfix import parse_postfix
-from mailtrace.rspamd import parse_rspamd
-from mailtrace.syslog import parse_rfc5424
+from mailforensics.parsers import parse_log_lines
+from mailforensics.postfix import parse_postfix
+from mailforensics.rspamd import parse_rspamd
+from mailforensics.syslog import parse_rfc5424
 
 
 def test_rfc5424_parser_handles_structured_data():

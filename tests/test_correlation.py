@@ -1,8 +1,8 @@
-from mailtrace.diagnose import assess
-from mailtrace.postfix import parse_postfix
-from mailtrace.rspamd import parse_rspamd
-from mailtrace.structured import parse_structured_events
-from mailtrace.trace import find_trace
+from mailforensics.diagnose import assess
+from mailforensics.postfix import parse_postfix
+from mailforensics.rspamd import parse_rspamd
+from mailforensics.structured import parse_structured_events
+from mailforensics.trace import find_trace
 
 APP = """\
 {"timestamp":"2026-10-04T04:36:47+00:00","source":"korpoappka","stage":"invite","kind":"submitted","correlation_id":"invite-42","message_id":"invite-123@sidelobe.dev","recipient":"tester@example.com","status":"submitted","message":"alpha invite handed to mail gateway"}

@@ -1,4 +1,4 @@
-from mailtrace.rspamd import parse_rspamd
+from mailforensics.rspamd import parse_rspamd
 
 LOG = """\
 2026-10-04T04:36:48.500+00:00 gateway rspamd[2222]: <abc>; task; rspamd_task_write_log: id: <invite-123@sidelobe.dev>, qid: <0DC461ACD87>, ip: 127.0.0.1, from: <korpoappka@sidelobe.dev>, (default: T (no action): [1.20/15.00] [DKIM_SIGNED(0.00)])
@@ -18,8 +18,8 @@ def test_rspamd_extracts_message_and_queue_ids():
 
 
 def test_rspamd_reject_can_be_assessed():
-    from mailtrace.diagnose import assess
-    from mailtrace.trace import find_trace
+    from mailforensics.diagnose import assess
+    from mailforensics.trace import find_trace
 
     log = (
         "2026-10-04T04:36:48.500+00:00 gateway rspamd[2222]: "

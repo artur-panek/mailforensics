@@ -1,10 +1,10 @@
 from datetime import UTC, datetime
 
-from mailtrace.diagnose import assess
-from mailtrace.latency import latency_spans, total_observed_ms
-from mailtrace.model import Event, Trace
-from mailtrace.pipeline import build_pipeline
-from mailtrace.queue import parse_postqueue_json
+from mailforensics.diagnose import assess
+from mailforensics.latency import latency_spans, total_observed_ms
+from mailforensics.model import Event, Trace
+from mailforensics.pipeline import build_pipeline
+from mailforensics.queue import parse_postqueue_json
 
 
 def test_postqueue_json_becomes_live_queue_evidence():

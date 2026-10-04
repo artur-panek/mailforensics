@@ -1,9 +1,9 @@
 from datetime import UTC, datetime
 
-from mailtrace.cli import _split_mode
-from mailtrace.html import render_html
-from mailtrace.model import Event, Trace
-from mailtrace.render import render_explain, render_json
+from mailforensics.cli import _split_mode
+from mailforensics.html import render_html
+from mailforensics.model import Event, Trace
+from mailforensics.render import render_explain, render_json
 
 
 def _trace():
@@ -64,6 +64,6 @@ def test_html_report_is_self_contained_and_escaped():
     output = render_html(trace)
 
     assert "<!doctype html>" in output
-    assert "mailtrace report" in output
+    assert "mailforensics report" in output
     assert "outside available evidence" in output
     assert "<script" not in output

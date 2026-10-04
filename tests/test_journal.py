@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from mailtrace import journal
+from mailforensics import journal
 
 
 def test_journal_builds_expected_command(monkeypatch):

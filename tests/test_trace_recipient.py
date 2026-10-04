@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
-from mailtrace.model import Event
-from mailtrace.trace import find_trace
+from mailforensics.model import Event
+from mailforensics.trace import find_trace
 
 
 def test_recipient_query_uses_latest_matching_message_only():
