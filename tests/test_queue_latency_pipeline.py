@@ -139,3 +139,46 @@ def test_pipeline_marks_mailbox_as_outside_evidence():
         ("RELAY", "confirmed"),
         ("MAILBOX", "unknown"),
     ]
+
+
+def test_pipeline_preserves_queue_then_relay_then_live_queue_snapshot():
+    events = [
+        Event(
+            timestamp=datetime(2026, 10, 4, 5, 0, tzinfo=UTC),
+            source="postfix",
+            host="gateway",
+            component="qmgr",
+            queue_id="ABC",
+            kind="queued",
+            message="queued",
+        ),
+        Event(
+            timestamp=datetime(2026, 10, 4, 5, 1, tzinfo=UTC),
+            source="postfix",
+            host="gateway",
+            component="smtp",
+            queue_id="ABC",
+            kind="delivery",
+            message="deferred",
+            details={"status": "deferred", "relay": "mx.example.net"},
+        ),
+        Event(
+            timestamp=datetime(2026, 10, 4, 5, 2, tzinfo=UTC),
+            source="postfix-queue",
+            host="gateway",
+            component="deferred",
+            queue_id="ABC",
+            kind="live-queue",
+            message="still queued",
+            details={"queue_name": "deferred"},
+        ),
+    ]
+    trace = Trace(events, {"ABC"}, set(), set(), "queue=ABC")
+
+    pipeline = build_pipeline(trace)
+
+    assert [(stage.label, stage.state) for stage in pipeline] == [
+        ("QUEUE", "confirmed"),
+        ("RELAY", "pending"),
+        ("QUEUE NOW", "pending"),
+    ]
