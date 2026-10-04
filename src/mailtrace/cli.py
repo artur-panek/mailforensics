@@ -136,7 +136,7 @@ def _run_demo(argv: list[str]) -> int:
     print()
     print(render_explain(demo_trace(args.scenario), color=color, ascii_only=ascii_only))
     print()
-    print(f"scenario: {args.scenario} · try: mailtrace demo delivered")
+    separator = " - " if ascii_only else " · "\n    print(f"scenario: {args.scenario}{separator}try: mailtrace demo delivered")
     return OK
 
 
