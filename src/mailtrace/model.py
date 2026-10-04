@@ -37,7 +37,11 @@ class Trace:
 
     @property
     def status(self) -> str:
-        statuses = [str(event.details.get("status", "")).casefold() for event in self.events]
+        statuses = [
+            str(event.details.get("status", "")).casefold()
+            for event in self.events
+            if event.source == "postfix" and event.kind == "delivery"
+        ]
         if "bounced" in statuses:
             return "bounced"
         if "deferred" in statuses:

@@ -77,6 +77,21 @@ def assess(trace: Trace) -> Assessment:
     postfix_seen = [event for event in trace.events if event.source == "postfix"]
     non_postfix = [event for event in trace.events if event.source != "postfix"]
 
+    rejected_by_filter = [
+        event
+        for event in rspamd_events
+        if str(event.details.get("action", "")).casefold() == "reject"
+    ]
+    if rejected_by_filter:
+        event = rejected_by_filter[-1]
+        return Assessment(
+            outcome="rejected-by-filter",
+            last_confirmed_stage=_stage(event),
+            confidence="high",
+            summary="Rspamd recorded a reject action for the correlated message.",
+            caveat="This confirms the filter decision; the SMTP rejection itself requires SMTP/milter evidence.",
+        )
+
     if rspamd_events:
         event = rspamd_events[-1]
         return Assessment(

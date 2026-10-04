@@ -4,7 +4,7 @@ from .model import Event, Trace
 
 
 def _normalize_message_id(value: str) -> str:
-    return value.strip().strip("<>").casefold()
+    return value.strip().strip("<>")
 
 
 def _queue(value: str) -> str:
