@@ -2,12 +2,11 @@
 
 ## 0.5.0
 
-- rename the project, Python package, and CLI from `MailForensics` to `mailforensics` before the first PyPI release
-- rename before the first public PyPI release to avoid a naming collision with an existing mail-tracing package
+- rename the project from `mailtrace` to **MailForensics** and the Python package/CLI to `mailforensics` before the first PyPI release
+- avoid a naming collision with an existing mail-tracing package
 - prepare secretless PyPI Trusted Publishing through GitHub Actions OIDC
 - add package build validation and clean-wheel smoke testing
 - add contribution and issue-reporting workflows
-
 
 ## 0.4.0
 
@@ -20,7 +19,6 @@
 - add Bash, Zsh, and Fish completion generation
 - add delivered/deferred/rejected/gap fixtures for zero-setup testing
 - document stable exit codes and terminal behavior
-
 
 ## 0.3.0
 
