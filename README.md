@@ -20,7 +20,7 @@ It correlates application events, Postfix queue IDs, Message-IDs, Rspamd/milter 
           not the guess.
 ```
 
-By [Artur Panek](https://artur.panek.tech/) · [Project page](https://artur.panek.tech/work/mailforensics/) · [PyPI](https://pypi.org/project/mailforensics/) · [Releases](https://github.com/artur-panek/mailforensics/releases)
+By [Artur Panek](https://artur.panek.tech/) · [Project page](https://artur.panek.tech/work/mailforensics/) · [Postfix evidence note](https://artur.panek.tech/notes/postfix-status-sent/) · [PyPI](https://pypi.org/project/mailforensics/) · [Releases](https://github.com/artur-panek/mailforensics/releases)
 
 ## Quick start
 
