@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2
+
+- refresh the package long description so documentation and contributor links render correctly on PyPI
+- include the current portfolio and engineering-note cross-links in the published README
+- keep runtime functionality unchanged from 0.5.1
+
 ## 0.5.1
 
 - rewrite the public README around installation, evidence sources, commands, and correlation semantics
