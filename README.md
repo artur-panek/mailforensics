@@ -1,26 +1,14 @@
 # MailForensics
 
-[![PyPI](https://img.shields.io/pypi/v/mailforensics.svg)](https://pypi.org/project/mailforensics/)
-[![Python](https://img.shields.io/pypi/pyversions/mailforensics.svg)](https://pypi.org/project/mailforensics/)
-[![CI](https://github.com/artur-panek/mailforensics/actions/workflows/ci.yml/badge.svg)](https://github.com/artur-panek/mailforensics/actions/workflows/ci.yml)
+**Evidence-backed tracing for outbound email.**
 
-**`strace` for an email moving through your mail stack.**
+[![PyPI](https://img.shields.io/pypi/v/mailforensics?style=flat-square&label=PyPI)](https://pypi.org/project/mailforensics/) [![Python](https://img.shields.io/pypi/pyversions/mailforensics?style=flat-square&label=Python)](https://pypi.org/project/mailforensics/) [![CI](https://img.shields.io/github/actions/workflow/status/artur-panek/mailforensics/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/artur-panek/mailforensics/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-MailForensics is an evidence-driven CLI for answering a deceptively simple question:
+MailForensics correlates application events, Postfix queue IDs, Message-IDs, Rspamd and milter activity, live queue state, handoffs, and relay results into one trace — then separates what the evidence proves from what remains unknown.
 
-> **Where did this email actually go?**
+Think of it as `strace` for an email moving through your mail stack.
 
-It correlates application events, Postfix queue IDs, Message-IDs, Rspamd/milter activity, live queue state, handoffs, and relay results into one trace — then explains what the available evidence proves and where it stops.
-
-```text
-      ╭──────────────────╮
-──────┤  MAILFORENSICS   ├──────▶
-      ╰──────────────────╯
-          trace the evidence,
-          not the guess.
-```
-
-By [Artur Panek](https://artur.panek.tech/) · [Project page](https://artur.panek.tech/work/mailforensics/) · [Postfix evidence note](https://artur.panek.tech/notes/postfix-status-sent/) · [PyPI](https://pypi.org/project/mailforensics/) · [Releases](https://github.com/artur-panek/mailforensics/releases)
+[Project page](https://artur.panek.tech/work/mailforensics/) · [Engineering note](https://artur.panek.tech/notes/postfix-status-sent/) · [PyPI](https://pypi.org/project/mailforensics/) · [Releases](https://github.com/artur-panek/mailforensics/releases)
 
 ## Quick start
 
