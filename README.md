@@ -1,12 +1,10 @@
 # MailForensics
 
-**Evidence-backed tracing for outbound email.**
+**Trace outbound email through logs, queues, filters and relays.**
 
 [![PyPI](https://img.shields.io/pypi/v/mailforensics?style=flat-square&label=PyPI)](https://pypi.org/project/mailforensics/) [![Python](https://img.shields.io/pypi/pyversions/mailforensics?style=flat-square&label=Python)](https://pypi.org/project/mailforensics/) [![CI](https://img.shields.io/github/actions/workflow/status/artur-panek/mailforensics/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/artur-panek/mailforensics/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-MailForensics correlates application events, Postfix queue IDs, Message-IDs, Rspamd and milter activity, live queue state, handoffs, and relay results into one trace — then separates what the evidence proves from what remains unknown.
-
-Think of it as `strace` for an email moving through your mail stack.
+MailForensics links application events, Postfix queue IDs, Message-IDs, filter activity and relay responses into a delivery timeline. It also checks live queue state when available and marks stages for which logs are missing.
 
 [Project page](https://artur.panek.tech/work/mailforensics/) · [Engineering note](https://artur.panek.tech/notes/postfix-status-sent/) · [PyPI](https://pypi.org/project/mailforensics/) · [Releases](https://github.com/artur-panek/mailforensics/releases)
 
@@ -102,7 +100,7 @@ Assessment
   Caveat: Postfix can retry later according to its queue schedule.
 ```
 
-The distinction matters: an absent event is an **evidence boundary**, not automatic proof that a component failed.
+A missing log entry is not proof that the corresponding component failed.
 
 ## Commands
 
