@@ -59,10 +59,12 @@ def parse_postqueue_json(
                 if arrival is not None
                 else observed
             )
-        except (TypeError, ValueError, OSError):
+        except (TypeError, ValueError, OSError, OverflowError):
             arrival_timestamp = observed
 
-        recipients = _recipient_addresses(payload.get("recipients"))
+        raw_recipients = payload.get("recipients")
+        recipient_entries = raw_recipients if isinstance(raw_recipients, list) else []
+        recipients = _recipient_addresses(recipient_entries)
         details: dict[str, Any] = {
             "queue_name": str(payload.get("queue_name", "unknown")),
             "captured_at": observed.isoformat(),
@@ -77,7 +79,7 @@ def parse_postqueue_json(
 
         delay_reasons = [
             str(item["delay_reason"])
-            for item in payload.get("recipients", [])
+            for item in recipient_entries
             if isinstance(item, dict) and item.get("delay_reason")
         ]
         if delay_reasons:
