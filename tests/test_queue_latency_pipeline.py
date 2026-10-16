@@ -1,4 +1,7 @@
+import json
 from datetime import UTC, datetime
+
+import pytest
 
 from mailforensics.diagnose import assess
 from mailforensics.latency import latency_spans, total_observed_ms
@@ -23,6 +26,30 @@ def test_postqueue_json_becomes_live_queue_evidence():
     assert event.kind == "live-queue"
     assert event.details["recipient"] == "tester@example.com"
     assert event.details["queue_name"] == "deferred"
+
+
+@pytest.mark.parametrize("recipients", [None, "unexpected", {"address": "test@example.net"}])
+def test_postqueue_handles_missing_recipient_list(recipients):
+    events = parse_postqueue_json(
+        [json.dumps({"queue_id": "abc123", "recipients": recipients})],
+        host="gateway",
+        captured_at=datetime(2026, 10, 4, 6, 0, tzinfo=UTC),
+    )
+
+    assert len(events) == 1
+    assert events[0].details["recipients"] == []
+    assert "delay_reasons" not in events[0].details
+
+
+def test_postqueue_ignores_out_of_range_arrival_time():
+    observed = datetime(2026, 10, 4, 6, 0, tzinfo=UTC)
+    events = parse_postqueue_json(
+        [json.dumps({"queue_id": "abc123", "arrival_time": 1e300})],
+        host="gateway",
+        captured_at=observed,
+    )
+
+    assert observed.isoformat() in events[0].message
 
 
 def test_latest_delivery_status_wins_over_earlier_deferred():
