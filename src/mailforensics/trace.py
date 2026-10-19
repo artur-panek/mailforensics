@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .identifiers import normalize_queue_id
 from .model import Event, Trace, event_recipients
 
 
@@ -8,7 +9,7 @@ def _normalize_message_id(value: str) -> str:
 
 
 def _queue(value: str) -> str:
-    return value.upper()
+    return normalize_queue_id(value)
 
 
 def _identifiers(event: Event) -> set[tuple[str, str]]:

@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 from typing import Any
 
+from .identifiers import normalize_queue_id
 from .model import Event
 
 
@@ -91,7 +92,7 @@ def parse_postqueue_json(
                 source="postfix-queue",
                 host=hostname,
                 component=details["queue_name"],
-                queue_id=str(queue_id).upper(),
+                queue_id=normalize_queue_id(str(queue_id)),
                 kind="live-queue",
                 message=(
                     f"queue entry present; arrived {arrival_timestamp.isoformat()}"

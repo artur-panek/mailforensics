@@ -4,6 +4,7 @@ import json
 from collections.abc import Iterable
 from typing import Any
 
+from .identifiers import normalize_queue_id
 from .model import Event
 from .timeparse import parse_iso_timestamp
 
@@ -37,7 +38,7 @@ def parse_structured_events(lines: Iterable[str]) -> list[Event]:
         message = _string(payload.get("message")) or component
         queue_id = _string(payload.get("queue_id"))
         if queue_id:
-            queue_id = queue_id.upper()
+            queue_id = normalize_queue_id(queue_id)
 
         details: dict[str, Any] = {}
         supplied_details = payload.get("details")
@@ -64,7 +65,7 @@ def parse_structured_events(lines: Iterable[str]) -> list[Event]:
         if "message_id" in details:
             details["message_id"] = str(details["message_id"]).strip("<>")
         if "linked_queue_id" in details:
-            details["linked_queue_id"] = str(details["linked_queue_id"]).upper()
+            details["linked_queue_id"] = normalize_queue_id(str(details["linked_queue_id"]))
 
         kind = _string(payload.get("kind"))
         if not kind:
