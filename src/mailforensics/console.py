@@ -16,6 +16,7 @@ WHITE = "\x1b[37m"
 STATE_COLORS = {
     "confirmed": GREEN,
     "pending": YELLOW,
+    "mixed": YELLOW,
     "failed": RED,
     "rejected": RED,
     "unknown": DIM,

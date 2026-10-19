@@ -51,7 +51,7 @@ def _assessment_lines(trace: Trace, *, color: bool = False) -> list[str]:
     tone = "confirmed"
     if any(token in outcome for token in ("reject", "bounce", "fail")):
         tone = "failed"
-    elif any(token in outcome for token in ("queue", "defer", "pending")):
+    elif any(token in outcome for token in ("queue", "defer", "pending", "mixed")):
         tone = "pending"
 
     lines = [
@@ -98,6 +98,7 @@ def _pipeline_lines(
     icons_unicode = {
         "confirmed": "●",
         "pending": "◐",
+        "mixed": "◐",
         "failed": "✕",
         "rejected": "✕",
         "unknown": "○",
@@ -105,6 +106,7 @@ def _pipeline_lines(
     icons_ascii = {
         "confirmed": "*",
         "pending": "~",
+        "mixed": "~",
         "failed": "x",
         "rejected": "x",
         "unknown": "?",
@@ -212,11 +214,22 @@ def render_json(trace: Trace) -> str:
     assessment = assess(trace)
     payload = {
         "query": trace.query,
+        "recipient": trace.recipient,
         "status": trace.status,
         "queue_ids": sorted(trace.queue_ids),
         "message_ids": sorted(trace.message_ids),
         "correlation_ids": sorted(trace.correlation_ids),
         "assessment": asdict(assessment),
+        "recipient_results": [
+            {
+                "recipient": result.recipient,
+                "status": result.status,
+                "delivery": _event_to_dict(result.delivery) if result.delivery else None,
+                "live_queue": _event_to_dict(result.live_queue)
+                if result.queued and result.live_queue else None,
+            }
+            for result in trace.recipient_results
+        ],
         "pipeline": [
             {
                 **asdict(stage),

@@ -21,6 +21,14 @@ Timestamp proximity is not currently sufficient by itself. Two messages sent clo
 
 Recipient address can seed a trace, but once initial matching events are found the graph expands through stronger identifiers.
 
+## Recipient outcomes
+
+The timeline keeps the complete correlated message. A `--to` query limits its delivery assessment to that recipient, so a successful transfer for another recipient cannot replace a deferred result.
+
+For message, queue, and correlation-ID queries, delivery results are tracked separately for each recipient. The status is `mixed` when those results differ, including a recipient whose outcome is still unknown. Queue snapshots apply to the recipients listed in that snapshot. A later delivery result supersedes an older queue observation.
+
+JSON reports include the selected `recipient` (or `null`) and `recipient_results`, with each recipient's latest delivery and current queue evidence. The original events remain in `events`.
+
 ## Evidence boundaries
 
 An assessment describes the last confirmed stage in the supplied evidence. It does not claim that an absent event proves a component failed.

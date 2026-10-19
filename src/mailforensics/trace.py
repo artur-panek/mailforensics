@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .model import Event, Trace
+from .model import Event, Trace, event_recipients
 
 
 def _normalize_message_id(value: str) -> str:
@@ -25,13 +25,7 @@ def _identifiers(event: Event) -> set[tuple[str, str]]:
 
 
 def _matches_recipient(event: Event, recipient: str) -> bool:
-    candidate = event.details.get("recipient")
-    if candidate and str(candidate).casefold() == recipient.casefold():
-        return True
-    recipients = event.details.get("recipients")
-    if isinstance(recipients, list):
-        return any(str(value).casefold() == recipient.casefold() for value in recipients)
-    return False
+    return any(address.casefold() == recipient.casefold() for address in event_recipients(event))
 
 
 def find_trace(
@@ -115,4 +109,5 @@ def find_trace(
         message_ids=message_ids,
         correlation_ids=correlation_ids,
         query=query,
+        recipient=recipient,
     )
