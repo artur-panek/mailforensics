@@ -4,6 +4,7 @@ import re
 from collections.abc import Iterable
 from datetime import datetime
 
+from .identifiers import normalize_queue_id
 from .model import Event
 from .syslog import parse_rfc5424
 from .timeparse import parse_classic_syslog, parse_iso_timestamp
@@ -90,8 +91,8 @@ def parse_rspamd(lines: Iterable[str], *, year: int | None = None) -> list[Event
             details["score"] = score_match.group("score")
             details["required_score"] = score_match.group("required")
 
-        queue_id = queue_match.group("value").upper() if queue_match else None
-        if queue_id in {"UNDEF", "UNKNOWN", "NONE", "-"}:
+        queue_id = normalize_queue_id(queue_match.group("value")) if queue_match else None
+        if queue_id is not None and queue_id.upper() in {"UNDEF", "UNKNOWN", "NONE", "-"}:
             queue_id = None
 
         if not queue_id and "message_id" not in details:

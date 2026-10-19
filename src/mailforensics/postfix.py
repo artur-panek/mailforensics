@@ -4,6 +4,7 @@ import re
 from collections.abc import Iterable
 from datetime import datetime
 
+from .identifiers import normalize_queue_id
 from .model import Event
 from .syslog import parse_rfc5424
 from .timeparse import parse_classic_syslog, parse_iso_timestamp
@@ -98,7 +99,7 @@ def parse_postfix(lines: Iterable[str], *, year: int | None = None) -> list[Even
             continue
 
         raw_queue_id = queue_match.group("queue")
-        queue_id = None if raw_queue_id == "NOQUEUE" else raw_queue_id.upper()
+        queue_id = None if raw_queue_id == "NOQUEUE" else normalize_queue_id(raw_queue_id)
         detail = queue_match.group("detail")
         component = data["process"].split("/", 1)[1]
         details: dict[str, str] = {}
@@ -119,7 +120,7 @@ def parse_postfix(lines: Iterable[str], *, year: int | None = None) -> list[Even
             if match:
                 value = match.group("value")
                 if key == "linked_queue_id":
-                    value = value.upper()
+                    value = normalize_queue_id(value)
                 details[key] = value
 
         lowered = detail.casefold()
