@@ -12,7 +12,8 @@ def _latest(events: list[Event]) -> Event | None:
 
 
 def assess(trace: Trace) -> Assessment:
-    if not trace.events:
+    events = sorted(trace.scoped_events, key=lambda event: event.timestamp)
+    if not events:
         return Assessment(
             outcome="no-evidence",
             last_confirmed_stage="-",
@@ -21,28 +22,37 @@ def assess(trace: Trace) -> Assessment:
             caveat="This says nothing about systems whose logs were not provided.",
         )
 
-    events = sorted(trace.events, key=lambda event: event.timestamp)
     last = events[-1]
-    delivery_events = [
-        event
-        for event in events
-        if event.source == "postfix"
-        and event.kind == "delivery"
-        and event.details.get("status")
-    ]
+    results = trace.recipient_results
+    delivery_events = [result.delivery for result in results if result.delivery]
     latest_delivery = _latest(delivery_events)
+    live_queue = _latest([result.live_queue for result in results if result.queued and result.live_queue])
+    scope = f" for <{trace.recipient}>" if trace.recipient else ""
 
-    live_queue = _latest([event for event in events if event.kind == "live-queue"])
+    if trace.status == "mixed":
+        detail = "; ".join(
+            f"{result.recipient or 'unspecified recipient'}: {result.status}"
+            for result in results
+        )
+        return Assessment(
+            outcome="mixed-recipients",
+            last_confirmed_stage=_stage(_latest([
+                *delivery_events, *([live_queue] if live_queue else [])
+            ]) or last),
+            confidence="high",
+            summary=f"Recipients have different recorded outcomes: {detail}.",
+            caveat="A successful next-hop transfer for one recipient does not resolve another recipient's delivery.",
+        )
 
     if latest_delivery:
-        status = str(latest_delivery.details["status"]).casefold()
+        status = trace.status
 
         if status == "sent":
             return Assessment(
                 outcome="accepted-by-next-hop",
                 last_confirmed_stage=_stage(latest_delivery),
                 confidence="high",
-                summary="Postfix recorded status=sent: the next SMTP/LMTP/local hop accepted the message.",
+                summary=f"Postfix recorded status=sent{scope}: the next SMTP/LMTP/local hop accepted the message.",
                 caveat="This is not proof that the message reached a recipient's inbox.",
             )
 
@@ -51,7 +61,7 @@ def assess(trace: Trace) -> Assessment:
                 outcome="bounced",
                 last_confirmed_stage=_stage(latest_delivery),
                 confidence="high",
-                summary="The latest Postfix delivery result is a bounce.",
+                summary=f"The latest Postfix delivery result{scope} is a bounce.",
             )
 
         if status == "deferred":
@@ -60,14 +70,14 @@ def assess(trace: Trace) -> Assessment:
                     outcome="queued-for-retry",
                     last_confirmed_stage=_stage(live_queue),
                     confidence="high",
-                    summary="Postfix deferred delivery and the message is still present in the live queue.",
+                    summary=f"Postfix deferred delivery{scope} and the message is still present in the live queue.",
                     caveat="Postfix can retry later according to its queue schedule.",
                 )
             return Assessment(
                 outcome="deferred",
                 last_confirmed_stage=_stage(latest_delivery),
                 confidence="high",
-                summary="The latest Postfix delivery result is deferred.",
+                summary=f"The latest Postfix delivery result{scope} is deferred.",
                 caveat="Postfix may retry after the end of the supplied evidence window.",
             )
 
