@@ -101,13 +101,33 @@ def _default_log_lines() -> list[str]:
     raise FileNotFoundError("no mail log found; pass --file, --journal, --live-queue, or pipe logs on stdin")
 
 
+def _same_details(left, right):
+    if left is right:
+        return True
+    # Keep JSON booleans distinct from equal Python numbers.
+    if isinstance(left, bool) or isinstance(right, bool):
+        return False
+    if isinstance(left, dict) and isinstance(right, dict):
+        return left.keys() == right.keys() and all(
+            _same_details(value, right[key]) for key, value in left.items()
+        )
+    if isinstance(left, list) and isinstance(right, list):
+        return len(left) == len(right) and all(
+            _same_details(a, b) for a, b in zip(left, right, strict=True)
+        )
+    return left == right
+
+
 def _dedupe(events):
-    seen = set()
+    seen = {}
     unique = []
     for event in sorted(events, key=lambda item: item.timestamp):
-        key = (event.timestamp, event.source, event.host, event.component, event.queue_id, event.message)
-        if key not in seen:
-            seen.add(key)
+        key = (event.timestamp, event.source, event.host, event.component, event.queue_id, event.kind, event.message)
+        details = seen.setdefault(key, [])
+        # Structured events can share text and timestamps while describing
+        # different messages or delivery results. Compare their evidence too.
+        if not any(_same_details(event.details, previous) for previous in details):
+            details.append(event.details)
             unique.append(event)
     return unique
 
