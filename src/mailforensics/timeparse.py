@@ -3,12 +3,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
-LOCAL_TZ = datetime.now().astimezone().tzinfo or UTC
-
 
 def normalize_timestamp(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=LOCAL_TZ)
+    # Naive log timestamps are local wall time. astimezone resolves the local
+    # UTC offset for that date, including DST, rather than using today's offset.
     return value.astimezone(UTC)
 
 

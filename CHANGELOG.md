@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- resolve naive local syslog timestamps using the offset at the event date, including daylight saving time
+
 ## 0.5.2
 
 - refresh the package long description so documentation and contributor links render correctly on PyPI

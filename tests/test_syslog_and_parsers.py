@@ -1,3 +1,7 @@
+import os
+import subprocess
+import sys
+
 from mailforensics.parsers import parse_log_lines
 from mailforensics.postfix import parse_postfix
 from mailforensics.rspamd import parse_rspamd
@@ -72,3 +76,28 @@ def test_builtin_registry_runs_both_parsers():
     events = parse_log_lines(lines, include_plugins=False)
 
     assert {event.source for event in events} == {"postfix", "rspamd"}
+
+
+def test_local_syslog_timestamps_use_the_offset_for_the_logged_date():
+    # Keep the test independent of the CI runner's local timezone.
+    script = (
+        "from mailforensics.timeparse import parse_iso_timestamp, parse_classic_syslog\n"
+        "print(parse_iso_timestamp('2026-01-15T12:00:00').isoformat())\n"
+        "print(parse_iso_timestamp('2026-07-15T12:00:00').isoformat())\n"
+        "print(parse_classic_syslog('Jan', '15', '12:00:00', 2026).isoformat())\n"
+        "print(parse_iso_timestamp('2026-01-15T12:00:00+02:00').isoformat())\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        env={**os.environ, "TZ": "Europe/Brussels"},
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=10,
+    )
+    assert result.stdout.splitlines() == [
+        "2026-01-15T11:00:00+00:00",
+        "2026-07-15T10:00:00+00:00",
+        "2026-01-15T11:00:00+00:00",
+        "2026-01-15T10:00:00+00:00",
+    ]
