@@ -1,8 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.5.3 - 2026-10-20
 
-- resolve naive local syslog timestamps using the offset at the event date, including daylight saving time
+- keep distinct Postfix delivery events when log lines share a timestamp or message text;
+- preserve case-sensitive long Postfix queue IDs during parsing and correlation;
+- report individual recipient outcomes instead of using the last delivery across all recipients;
+- handle incomplete Postfix queue JSON entries without losing the rest of the queue;
+- resolve historical local syslog timestamps using the UTC offset for the event date, including daylight saving time.
 
 ## 0.5.2
 
