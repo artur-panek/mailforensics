@@ -101,3 +101,41 @@ def test_local_syslog_timestamps_use_the_offset_for_the_logged_date():
         "2026-01-15T11:00:00+00:00",
         "2026-01-15T10:00:00+00:00",
     ]
+
+
+def test_postfix_skips_invalid_timestamp_and_keeps_following_delivery():
+    bad_lines = [
+        "2026-02-30T04:36:48+00:00 gateway postfix/smtp[1200]: "
+        "ABC123: to=<tester@example.com>, status=sent",
+        "Feb 30 04:36:48 gateway postfix/smtp[1200]: "
+        "ABC123: to=<tester@example.com>, status=sent",
+    ]
+    valid = (
+        "2026-02-28T04:36:49+00:00 gateway postfix/smtp[1200]: "
+        "ABC123: to=<tester@example.com>, status=sent"
+    )
+
+    events = parse_postfix([*bad_lines, valid], year=2026)
+
+    assert len(events) == 1
+    assert events[0].queue_id == "ABC123"
+    assert events[0].kind == "delivery"
+
+
+def test_rspamd_skips_invalid_timestamp_and_keeps_following_filter_event():
+    bad_lines = [
+        "2026-02-30T04:36:48+00:00 gateway rspamd[2222]: "
+        "qid: <ABC123>, (default: T (reject): [16.00/15.00])",
+        "Feb 30 04:36:48 gateway rspamd[2222]: "
+        "qid: <ABC123>, (default: T (reject): [16.00/15.00])",
+    ]
+    valid = (
+        "2026-02-28T04:36:49+00:00 gateway rspamd[2222]: "
+        "qid: <ABC123>, (default: T (reject): [16.00/15.00])"
+    )
+
+    events = parse_rspamd([*bad_lines, valid], year=2026)
+
+    assert len(events) == 1
+    assert events[0].queue_id == "ABC123"
+    assert events[0].kind == "filter-reject"
