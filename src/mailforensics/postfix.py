@@ -49,16 +49,20 @@ def _parse_timestamp(line: str, year: int) -> tuple[datetime, dict[str, str]] | 
 
     iso_match = ISO_SYSLOG_RE.match(line)
     if iso_match:
-        return parse_iso_timestamp(iso_match.group("timestamp")), iso_match.groupdict()
+        try:
+            return parse_iso_timestamp(iso_match.group("timestamp")), iso_match.groupdict()
+        except ValueError:
+            return None
 
     classic_match = CLASSIC_SYSLOG_RE.match(line)
     if not classic_match:
         return None
     data = classic_match.groupdict()
-    return (
-        parse_classic_syslog(data["month"], data["day"], data["time"], year),
-        data,
-    )
+    try:
+        timestamp = parse_classic_syslog(data["month"], data["day"], data["time"], year)
+    except ValueError:
+        return None
+    return timestamp, data
 
 
 def _kind_for(component: str, detail: str, details: dict[str, str]) -> str:
