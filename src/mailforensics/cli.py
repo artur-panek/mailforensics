@@ -230,7 +230,7 @@ def main(argv: list[str] | None = None) -> int:
         for path in args.events or []:
             events.extend(parse_structured_events(_read_path(path)))
         for path in args.queue_file or []:
-            events.extend(parse_postqueue_json(_read_path(path)))
+            events.extend(parse_postqueue_json(_read_path(path), host="-"))
         if args.live_queue:
             events.extend(read_postqueue())
         trace = find_trace(

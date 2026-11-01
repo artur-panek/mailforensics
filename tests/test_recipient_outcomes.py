@@ -87,7 +87,7 @@ def test_later_retry_only_replaces_that_recipients_result():
 def queue_snapshot(recipients, second=3):
     return parse_postqueue_json([
         json.dumps({"queue_id": "ABC123", "queue_name": "deferred", "recipients": recipients})
-    ], captured_at=datetime(2026, 10, 18, 10, 0, second, tzinfo=UTC))
+    ], host="mx", captured_at=datetime(2026, 10, 18, 10, 0, second, tzinfo=UTC))
 
 
 def test_remaining_queue_recipient_does_not_change_a_successful_recipient():

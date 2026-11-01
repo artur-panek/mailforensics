@@ -15,6 +15,16 @@ An event joins a trace when it shares at least one known identifier. Its other i
 
 This allows a structured application event containing both `correlation_id` and `message_id` to bridge an application request to a Postfix cleanup event. A Rspamd event containing the same Message-ID or queue ID can then join the same trace.
 
+## Queue identity and ambiguity
+
+Queue IDs are not globally unique. [Postfix documents](https://www.postfix.org/postqueue.1.html) that different instances may use the same ID, and an instance may reuse an ID over time.
+
+Native Postfix and postqueue events therefore match ordinary queue IDs only within their recorded host. Application and filter hosts identify their producers, which need not own the queue; their queue references, and explicit `queued as` handoffs, resolve only when the supplied native evidence identifies at most one target host. Saved `--queue-file` snapshots have unknown host (`-`), because their JSON does not identify the source host; the analyst's machine is not assumed to own them. Live `--live-queue` snapshots retain their local host. Report fields are unchanged.
+
+A bare `--queue` matching multiple hosts is an error. Use `--message-id` or the latest-recipient `--to` selector to identify a trace, or narrow the supplied logs. An ambiguous application reference or handoff also causes an error rather than choosing a host. If a selected host/queue has conflicting Message-IDs, narrow the evidence window: the tool does not assign events to reused queue IDs by timestamp proximity. These errors use the existing runtime-error exit code 2 and do not emit a success report.
+
+Host names are compared exactly; short names and fully qualified names are not guessed to be aliases. Supply consistent host identities, including for queue snapshots. Instances sharing a recorded host, and reuse without distinguishing Message-IDs, cannot always be separated from this evidence. Message-ID and application correlation-ID bridges retain their existing semantics: they are supplied identifiers, not authentication or proof of global uniqueness.
+
 ## What is intentionally not a correlation key
 
 Timestamp proximity is not currently sufficient by itself. Two messages sent close together should not be merged merely because they happened in the same second.
