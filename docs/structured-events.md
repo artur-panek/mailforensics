@@ -31,3 +31,5 @@ Each line is one JSON object.
 | `details` | no | free-form JSON object preserved in the trace |
 
 The best bridge event contains an application `correlation_id` plus a Message-ID or queue ID. That connects business/application context to the mail infrastructure without guessing from time or recipient alone.
+
+The application `host` identifies the producer, not necessarily the queue owner. A queue-only bridge must be unambiguous in the supplied native evidence; see [queue identity and ambiguity](correlation.md#queue-identity-and-ambiguity).
