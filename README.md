@@ -125,7 +125,7 @@ A single run can combine multiple sources:
 
 - classic syslog mail logs;
 - ISO/journald-style logs;
-- RFC 5424 syslog;
+- RFC 5424 syslog, including the UTF-8 message encoding marker;
 - direct `journalctl` collection;
 - live or saved `postqueue -j` snapshots;
 - Rspamd task/proxy logs;

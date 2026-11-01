@@ -78,5 +78,6 @@ def parse_rfc5424(line: str) -> SyslogRecord | None:
         host=data["host"],
         app=data["app"],
         procid=data["procid"],
-        body=body,
+        # RFC 5424 MSG-UTF8 starts with an encoding marker, not message text.
+        body=body.removeprefix("\ufeff"),
     )

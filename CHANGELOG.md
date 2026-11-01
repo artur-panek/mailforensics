@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- parse RFC 5424 UTF-8 messages with their encoding marker so Postfix delivery evidence is not silently dropped.
+
 ## 0.5.3 - 2026-10-20
 
 - keep distinct Postfix delivery events when log lines share a timestamp or message text;
