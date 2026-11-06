@@ -8,7 +8,7 @@ _mailforensics_complete() {
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   local commands="trace explain demo doctor parsers completion"
-  local common="--file --events --journal --unit --since --until --live-queue --queue-file --no-plugins --message-id --queue --to --correlation-id --year --json --html --color --ascii --version --help"
+  local common="--file --events --journal --unit --since --until --live-queue --queue-file --queue-observed-at --no-plugins --message-id --queue --to --correlation-id --year --json --html --color --ascii --version --help"
   if [[ ${COMP_CWORD} -eq 1 ]]; then
     COMPREPLY=( $(compgen -W "$commands $common" -- "$cur") )
     return

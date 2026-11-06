@@ -33,8 +33,12 @@ def parse_postqueue_json(
     *,
     host: str | None = None,
     captured_at: datetime | None = None,
+    live: bool = True,
 ) -> list[Event]:
-    observed = captured_at or datetime.now(UTC)
+    if captured_at is not None and (captured_at.tzinfo is None or captured_at.utcoffset() is None):
+        raise QueueError("queue observation time must include a UTC offset")
+    observed = captured_at or (datetime.now(UTC) if live else None)
+    timestamp = observed or datetime.min.replace(tzinfo=UTC)
     hostname = host or socket.gethostname()
     events: list[Event] = []
 
@@ -58,17 +62,18 @@ def parse_postqueue_json(
             arrival_timestamp = (
                 datetime.fromtimestamp(float(arrival), UTC)
                 if arrival is not None
-                else observed
+                else timestamp
             )
         except (TypeError, ValueError, OSError, OverflowError):
-            arrival_timestamp = observed
+            arrival_timestamp = timestamp
 
         raw_recipients = payload.get("recipients")
         recipient_entries = raw_recipients if isinstance(raw_recipients, list) else []
         recipients = _recipient_addresses(recipient_entries)
         details: dict[str, Any] = {
             "queue_name": str(payload.get("queue_name", "unknown")),
-            "captured_at": observed.isoformat(),
+            "captured_at": observed.isoformat() if observed is not None else None,
+            "observation": "live" if live else ("saved" if observed else "unknown-age"),
             "recipients": recipients,
         }
         if sender := payload.get("sender"):
@@ -88,14 +93,15 @@ def parse_postqueue_json(
 
         events.append(
             Event(
-                timestamp=observed,
+                timestamp=timestamp,
                 source="postfix-queue",
                 host=hostname,
                 component=details["queue_name"],
                 queue_id=normalize_queue_id(str(queue_id)),
-                kind="live-queue",
+                kind="live-queue" if live else ("queue-snapshot" if observed else "queue-unknown"),
                 message=(
-                    f"queue entry present; arrived {arrival_timestamp.isoformat()}"
+                    f"queue entry in supplied evidence; arrived {arrival_timestamp.isoformat()}"
+                    if arrival is not None else "queue entry in supplied evidence; arrival time unavailable"
                 ),
                 details=details,
                 raw=line,

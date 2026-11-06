@@ -30,7 +30,7 @@ def render_html(trace: Trace) -> str:
 
     event_rows = "".join(
         "<tr>"
-        f"<td>{escape(event.timestamp.isoformat())}</td>"
+        f"<td>{escape(event.timestamp.isoformat() if event.kind != 'queue-unknown' else 'unknown observation time')}</td>"
         f"<td>{escape(event.source)}</td>"
         f"<td>{escape(event.component)}</td>"
         f"<td>{escape(event.queue_id or '-')}</td>"

@@ -21,6 +21,8 @@ def _detail(event: Event) -> str:
         return f"Rspamd: {action}" if action else "Rspamd processed message"
     if event.kind == "queued":
         return f"queue {event.queue_id or '-'}"
+    if event.kind == "queue-snapshot":
+        return f"present at saved observation {event.timestamp.isoformat()}"
     if event.kind == "live-queue":
         name = event.details.get("queue_name", "queue")
         return f"still present in {name} queue"
@@ -55,7 +57,7 @@ def build_pipeline(trace: Trace) -> list[PipelineStage]:
         event
         for event in events
         if event.source == "postfix"
-        and event.kind in {"pickup", "received", "message-id", "activity"}
+        and event.kind in {"pickup", "received", "message-id", "activity", "smtp-reject"}
     ]
     if event := _first(postfix_intake):
         stages.append(

@@ -8,7 +8,7 @@ def stage_name(event: Event) -> str:
 
 
 def latency_spans(trace: Trace) -> list[LatencySpan]:
-    events = sorted(trace.events, key=lambda event: event.timestamp)
+    events = sorted((e for e in trace.events if e.kind != "queue-unknown"), key=lambda event: event.timestamp)
     spans: list[LatencySpan] = []
 
     for previous, current in zip(events, events[1:], strict=False):
@@ -32,7 +32,9 @@ def latency_spans(trace: Trace) -> list[LatencySpan]:
 def total_observed_ms(trace: Trace) -> int:
     if len(trace.events) < 2:
         return 0
-    events = sorted(trace.events, key=lambda event: event.timestamp)
+    events = sorted((e for e in trace.events if e.kind != "queue-unknown"), key=lambda event: event.timestamp)
+    if len(events) < 2:
+        return 0
     return max(
         0,
         int((events[-1].timestamp - events[0].timestamp).total_seconds() * 1000),

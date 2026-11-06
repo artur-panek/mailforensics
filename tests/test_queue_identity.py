@@ -1,12 +1,10 @@
 import json
-from datetime import UTC, datetime
 
 import pytest
 
 from mailforensics.cli import main
 from mailforensics.diagnose import assess
 from mailforensics.postfix import parse_postfix
-from mailforensics.queue import parse_postqueue_json
 from mailforensics.rspamd import parse_rspamd
 from mailforensics.structured import parse_structured_events
 from mailforensics.trace import find_trace
@@ -241,12 +239,6 @@ def test_cli_ambiguous_queue_is_an_error_without_a_success_report(tmp_path, caps
     ["--queue", "ABC123"], ["--message-id", "one@example.net"],
 ])
 def test_cli_saved_queue_does_not_claim_the_analysts_hostname(tmp_path, capsys, monkeypatch, selector):
-    monkeypatch.setattr(
-        "mailforensics.cli.parse_postqueue_json",
-        lambda lines, **kwargs: parse_postqueue_json(
-            lines, captured_at=datetime(2026, 11, 1, 11, tzinfo=UTC), **kwargs
-        ),
-    )
     log = tmp_path / "mail.log"
     log.write_text("\n".join([
         cleanup("remote-mx.example.net", "ABC123", "one@example.net"),
@@ -259,7 +251,7 @@ def test_cli_saved_queue_does_not_claim_the_analysts_hostname(tmp_path, capsys, 
     }), encoding="utf-8")
 
     result = main([
-        "--file", str(log), "--queue-file", str(queue), *selector, "--json", "--no-plugins",
+        "--file", str(log), "--queue-file", str(queue), "--queue-observed-at", "2026-11-01T11:00:00Z", *selector, "--json", "--no-plugins",
     ])
 
     assert result == 0
