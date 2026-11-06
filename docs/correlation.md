@@ -33,6 +33,8 @@ Recipient address can seed a trace, but once initial matching events are found t
 
 ## Recipient outcomes
 
+Postfix `smtp`, `lmtp`, `local`, `pipe`, and `virtual` records with a delivery status contribute to recipient outcomes. Activity without a delivery status remains separate evidence.
+
 The timeline keeps the complete correlated message. A `--to` query limits its delivery assessment to that recipient, so a successful transfer for another recipient cannot replace a deferred result.
 
 For message, queue, and correlation-ID queries, delivery results are tracked separately for each recipient. The status is `mixed` when those results differ, including a recipient whose outcome is still unknown. Queue snapshots apply to the recipients listed in that snapshot. A later delivery result supersedes an older queue observation.
