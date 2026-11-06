@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from . import __version__
@@ -72,6 +73,7 @@ def _build_parser(*, prog: str) -> argparse.ArgumentParser:
     parser.add_argument("--until", help="journalctl --until value.")
     parser.add_argument("--live-queue", action="store_true", help="Add a live Postfix queue snapshot using postqueue -j.")
     parser.add_argument("--queue-file", action="append", type=Path, help="Read saved postqueue -j JSONL.")
+    parser.add_argument("--queue-observed-at", help="Observation time for saved queue files, as ISO 8601 with UTC offset; omitted means unknown age.")
     parser.add_argument("--no-plugins", action="store_true", help="Disable external parser plugins.")
     query = parser.add_mutually_exclusive_group(required=True)
     query.add_argument("--message-id", help="Trace by RFC Message-ID.")
@@ -229,8 +231,11 @@ def main(argv: list[str] | None = None) -> int:
             events.extend(parse_log_lines(lines, year=args.year, include_plugins=not args.no_plugins))
         for path in args.events or []:
             events.extend(parse_structured_events(_read_path(path)))
+        observed = datetime.fromisoformat(args.queue_observed_at.replace("Z", "+00:00")) if args.queue_observed_at else None
+        if observed is not None and not args.queue_file:
+            raise QueueError("--queue-observed-at requires --queue-file")
         for path in args.queue_file or []:
-            events.extend(parse_postqueue_json(_read_path(path), host="-"))
+            events.extend(parse_postqueue_json(_read_path(path), host="-", captured_at=observed, live=False))
         if args.live_queue:
             events.extend(read_postqueue())
         trace = find_trace(

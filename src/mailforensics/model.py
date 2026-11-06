@@ -104,7 +104,7 @@ class Trace:
                 and event.details.get("status")
             )
             addresses: list[str | None] = list(event_recipients(event))
-            if not addresses and (delivery or event.kind == "live-queue"):
+            if not addresses and (delivery or event.kind in {"live-queue", "queue-snapshot"}):
                 addresses = [None]
             for address in addresses:
                 key = address.casefold() if address is not None else None
@@ -113,7 +113,7 @@ class Trace:
                 result = results.setdefault(key, RecipientResult(address))
                 if delivery:
                     result.delivery = event
-                elif event.kind == "live-queue":
+                elif event.kind in {"live-queue", "queue-snapshot"}:
                     result.live_queue = event
         return [results[key] for key in sorted(results, key=lambda value: value or "")]
 
@@ -124,7 +124,7 @@ class Trace:
             statuses = {result.status for result in results}
             return next(iter(statuses)) if len(statuses) == 1 else "mixed"
         events = self.scoped_events
-        if any(event.kind in {"milter-reject", "filter-reject"} for event in events):
+        if any(event.kind in {"milter-reject", "filter-reject", "smtp-reject"} for event in events):
             return "rejected"
         if any(event.kind == "queued" for event in events):
             return "queued"

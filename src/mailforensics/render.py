@@ -149,12 +149,12 @@ def render_text(trace: Trace, *, color: bool = False) -> str:
     if not trace.events:
         lines.append("No matching events found.")
     else:
-        base = trace.events[0].timestamp
+        base = next((e.timestamp for e in trace.events if e.kind != "queue-unknown"), trace.events[0].timestamp)
         for event in trace.events:
-            delta_ms = int((event.timestamp - base).total_seconds() * 1000)
+            delta_ms = int((event.timestamp - base).total_seconds() * 1000) if event.kind != "queue-unknown" else 0
             component = f"{event.source}/{event.component}"
             lines.append(
-                f"{event.timestamp.isoformat(timespec='milliseconds')}  "
+                f"{event.timestamp.isoformat(timespec='milliseconds') if event.kind != 'queue-unknown' else 'unknown observation time'}  "
                 f"+{delta_ms:>6}ms  {(event.queue_id or '-'):<14} "
                 f"{component:<20} {_event_summary(event)}"
             )
@@ -199,7 +199,7 @@ def render_explain(
 
 def _event_to_dict(event: Event) -> dict[str, Any]:
     return {
-        "timestamp": event.timestamp.isoformat(),
+        "timestamp": event.timestamp.isoformat() if event.kind != "queue-unknown" else None,
         "source": event.source,
         "host": event.host,
         "component": event.component,

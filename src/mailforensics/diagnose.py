@@ -70,7 +70,7 @@ def assess(trace: Trace) -> Assessment:
                     outcome="queued-for-retry",
                     last_confirmed_stage=_stage(live_queue),
                     confidence="high",
-                    summary=f"Postfix deferred delivery{scope} and the message is still present in the live queue.",
+                    summary=(f"Postfix deferred delivery{scope}; queue presence was observed at {live_queue.timestamp.isoformat()}." if live_queue.kind == "queue-snapshot" else f"Postfix deferred delivery{scope} and the message is still present in the live queue."),
                     caveat="Postfix can retry later according to its queue schedule.",
                 )
             return Assessment(
@@ -114,12 +114,17 @@ def assess(trace: Trace) -> Assessment:
 
     if live_queue:
         return Assessment(
-            outcome="queued-live",
+            outcome="queued-live" if live_queue.kind == "live-queue" else "queued-at-snapshot",
             last_confirmed_stage=_stage(live_queue),
             confidence="high",
-            summary="The correlated message is currently present in the Postfix queue.",
+            summary=("The correlated message is currently present in the Postfix queue." if live_queue.kind == "live-queue" else f"The message was present in the saved Postfix queue observation at {live_queue.timestamp.isoformat()}."),
             caveat="Queue presence does not by itself explain why delivery has not completed.",
         )
+
+    if event := _latest([e for e in events if e.kind == "smtp-reject"]):
+        return Assessment("smtp-rejected", _stage(event), "high", f"Postfix rejected the SMTP {event.details.get('smtp_stage', 'request')} request with {event.details.get('smtp_code', 'an error')}.", "No queue ID was assigned; correlation is limited to supplied recipient evidence.")
+    if event := _latest([e for e in events if e.kind == "queue-unknown"]):
+        return Assessment("queue-observation-unknown-age", _stage(event), "low", "The message appears in a saved queue file of unknown age.", "This does not establish current queue presence or its ordering relative to delivery logs; supply --queue-observed-at when known.")
 
     postfix_queued = [
         event

@@ -31,6 +31,7 @@ STATUS_RE = re.compile(r"status=(?P<value>[A-Za-z]+)", re.IGNORECASE)
 DSN_RE = re.compile(r"dsn=(?P<value>[0-9.]+)", re.IGNORECASE)
 DELAY_RE = re.compile(r"delay=(?P<value>[0-9.]+)", re.IGNORECASE)
 QUEUED_AS_RE = re.compile(r"queued as (?P<value>[A-Za-z0-9]+)", re.IGNORECASE)
+SMTP_REJECT_RE = re.compile(r"^reject:\s*(?P<stage>[A-Za-z]+)\s+from\s+.*?:\s*(?P<code>[45][0-9]{2})(?:\s|$)", re.I)
 MILTER_STAGE_RE = re.compile(
     r"milter-(?:reject|discard):\s*(?P<value>[^\s;]+)",
     re.IGNORECASE,
@@ -80,7 +81,7 @@ def _kind_for(component: str, detail: str, details: dict[str, str]) -> str:
     if component == "pickup":
         return "pickup"
     if component == "smtpd":
-        return "received"
+        return "smtp-reject" if SMTP_REJECT_RE.match(detail) else "received"
     if component == "bounce":
         return "bounce"
     if "removed" in lowered:
@@ -127,6 +128,9 @@ def parse_postfix(lines: Iterable[str], *, year: int | None = None) -> list[Even
                     value = normalize_queue_id(value)
                 details[key] = value
 
+        if component == "smtpd" and (rejection := SMTP_REJECT_RE.match(detail)):
+            details["smtp_stage"] = rejection["stage"].upper()
+            details["smtp_code"] = rejection["code"]
         lowered = detail.casefold()
         if "milter-reject:" in lowered:
             details["milter_action"] = "reject"

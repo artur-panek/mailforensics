@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- preserve saved queue observation time with `--queue-observed-at`; unknown-age imports no longer assert current queue presence or override delivery outcomes.
+- recognise SMTP rejections with their stage and reply code without assigning NOQUEUE a queue identity; keep reject warnings separate.
 - scope Postfix queue correlation by recorded host and reject ambiguous queue references or conflicting Message-IDs instead of attributing another message's delivery result.
 - parse RFC 5424 UTF-8 messages with their encoding marker so Postfix delivery evidence is not silently dropped.
 
