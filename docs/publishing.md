@@ -36,19 +36,8 @@ python -m venv /tmp/mailforensics-release
 
 ## Releases
 
-For each public release:
+After the tested candidate is approved and integrated into `main`, create the exact branch `release/vX.Y.Z` from that tested commit. The `push` to this branch starts publication; normal PR branches and creating a GitHub Release do not.
 
-1. Merge the release-ready PR into `main`.
-2. Create a GitHub Release tagged `vX.Y.Z` from `main`.
-3. The workflow builds a fresh sdist and wheel.
-4. The `pypi` job obtains a short-lived OIDC credential.
-5. PyPI publishes the matching wheel and source distribution.
-6. Verify:
-
-```bash
-python -m pip install mailforensics
-mailforensics --version
-mailforensics demo
-```
+The workflow verifies the branch name against package metadata, builds and smoke-tests the wheel, publishes to PyPI through OIDC, then creates the matching GitHub Release. Do not push a release branch or manually dispatch a second publication as part of candidate preparation. Verify the installed version and a demo after publication. PyPI artifacts are immutable; a correction requires a new version.
 
 Do not store a PyPI API token in GitHub secrets for this workflow.

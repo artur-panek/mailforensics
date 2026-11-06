@@ -75,8 +75,8 @@ def _kind_for(component: str, detail: str, details: dict[str, str]) -> str:
     if component == "cleanup" and "message_id" in details:
         return "message-id"
     if component == "qmgr":
-        return "queued"
-    if component in {"smtp", "lmtp", "local", "pipe"} and "status" in details:
+        return "removed" if lowered.strip() == "removed" else "queued"
+    if component in {"smtp", "lmtp", "local", "pipe", "virtual"} and "status" in details:
         return "delivery"
     if component == "pickup":
         return "pickup"
