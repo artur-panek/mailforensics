@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from datetime import datetime
+from email.utils import getaddresses
+from typing import Any
 
 from .identifiers import normalize_queue_id
 from .model import Event
@@ -26,6 +28,7 @@ MESSAGE_ID_RE = re.compile(r"\b(?:id|message-id):\s*<(?P<value>[^>]+)>", re.IGNO
 QID_RE = re.compile(r"\bqid:\s*<?(?P<value>[A-Za-z0-9_-]+)>?", re.IGNORECASE)
 FROM_RE = re.compile(r"\bfrom:\s*<(?P<value>[^>]*)>", re.IGNORECASE)
 TO_RE = re.compile(r"\b(?:rcpt|to):\s*<(?P<value>[^>]*)>", re.IGNORECASE)
+RCPTS_RE = re.compile(r"\brcpts:\s*<(?P<value>[^>]*)>", re.IGNORECASE)
 ACTION_RE = re.compile(
     r"\b[A-Z]\s+\((?P<value>"
     r"reject|soft reject|add header|rewrite subject|greylist|quarantine|discard|accept|no action"
@@ -79,16 +82,22 @@ def parse_rspamd(lines: Iterable[str], *, year: int | None = None) -> list[Event
         queue_match = QID_RE.search(body)
         sender_match = FROM_RE.search(body)
         recipient_match = TO_RE.search(body)
+        recipients_match = RCPTS_RE.search(body)
         action_match = ACTION_RE.search(body)
         score_match = SCORE_RE.search(body)
 
-        details: dict[str, str] = {}
+        details: dict[str, Any] = {}
         if message_match:
             details["message_id"] = message_match.group("value")
         if sender_match:
             details["sender"] = sender_match.group("value")
         if recipient_match:
             details["recipient"] = recipient_match.group("value")
+        if recipients_match:
+            details["recipients"] = [
+                address for _, address in getaddresses([recipients_match.group("value")])
+                if address
+            ]
         if action_match:
             details["action"] = action_match.group("value").casefold()
         if score_match:
