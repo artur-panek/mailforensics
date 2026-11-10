@@ -38,15 +38,16 @@ python -m venv /tmp/mailforensics-release
 
 For each public release:
 
-1. Merge the release-ready PR into `main`.
-2. Create a GitHub Release tagged `vX.Y.Z` from `main`.
-3. The workflow builds a fresh sdist and wheel.
-4. The `pypi` job obtains a short-lived OIDC credential.
-5. PyPI publishes the matching wheel and source distribution.
-6. Verify:
+1. Update the version in `pyproject.toml` and `src/mailforensics/__init__.py`, and add the dated release entry to `CHANGELOG.md`.
+2. Merge the release-ready PR into `main` after CI passes.
+3. Create and push a branch named `release/vX.Y.Z` at the tested merge commit. Pushing this branch starts publication; merging into `main` or creating a tag alone does not.
+4. The workflow verifies that the release branch matches the package version, builds a fresh sdist and wheel, validates metadata, and smoke-tests the wheel.
+5. The `pypi` job obtains a short-lived OIDC credential and publishes the distributions to PyPI.
+6. After PyPI publishing succeeds, the workflow creates the GitHub Release tagged `vX.Y.Z` at the release commit.
+7. Verify the published version from a clean environment:
 
 ```bash
-python -m pip install mailforensics
+python -m pip install "mailforensics==X.Y.Z"
 mailforensics --version
 mailforensics demo
 ```

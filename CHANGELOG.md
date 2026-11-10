@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+## 0.5.4 - 2026-11-10
+
 - preserve envelope recipients from Rspamd's default `rcpts` log field so recipient queries can find filter evidence, including multi-recipient rejections.
 - scope Postfix queue correlation by recorded host and reject ambiguous queue references or conflicting Message-IDs instead of attributing another message's delivery result.
 - parse RFC 5424 UTF-8 messages with their encoding marker so Postfix delivery evidence is not silently dropped.
+- skip malformed Postfix and Rspamd timestamps without aborting ingestion of valid log entries.
 
 ## 0.5.3 - 2026-10-20
 
