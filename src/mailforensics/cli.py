@@ -240,12 +240,11 @@ def main(argv: list[str] | None = None) -> int:
             recipient=args.recipient,
             correlation_id=args.correlation_id,
         )
+        if args.html:
+            args.html.write_text(render_html(trace), encoding="utf-8")
     except (JournalError, OSError, ParserError, QueueError, ValueError) as exc:
         print(f"mailforensics: {exc}", file=sys.stderr)
         return ERROR
-
-    if args.html:
-        args.html.write_text(render_html(trace), encoding="utf-8")
 
     color = False if args.json else supports_color(args.color, stream=sys.stdout)
     ascii_only = args.ascii or not supports_unicode(stream=sys.stdout)
