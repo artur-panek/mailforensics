@@ -12,6 +12,7 @@ cd mailforensics
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
+python -m pip install --upgrade build twine
 ```
 
 Run the same checks as CI:
