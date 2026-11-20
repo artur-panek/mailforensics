@@ -7,7 +7,10 @@ from email.utils import parsedate_to_datetime
 def normalize_timestamp(value: datetime) -> datetime:
     # Naive log timestamps are local wall time. astimezone resolves the local
     # UTC offset for that date, including DST, rather than using today's offset.
-    return value.astimezone(UTC)
+    try:
+        return value.astimezone(UTC)
+    except OverflowError as exc:
+        raise ValueError("timestamp is outside the supported UTC range") from exc
 
 
 def parse_iso_timestamp(value: str) -> datetime:
