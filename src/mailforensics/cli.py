@@ -220,11 +220,21 @@ def main(argv: list[str] | None = None) -> int:
     try:
         events = []
         explicit = bool(args.file or args.events or args.journal or args.live_queue or args.queue_file)
+        inputs = [*(args.file or []), *(args.events or []), *(args.queue_file or [])]
         batches = [_read_path(path) for path in (args.file or [])]
         if args.journal:
             batches.append(read_journal(units=args.unit, since=args.since, until=args.until))
         if not explicit:
             batches.append(_default_log_lines())
+            default_log = next((path for path in DEFAULT_LOGS if path.exists()), None)
+            if default_log is not None:
+                inputs.append(default_log)
+        if (
+            args.html is not None
+            and args.html.exists()
+            and any(args.html.samefile(path) for path in inputs if str(path) != "-")
+        ):
+            raise ValueError("HTML report must not overwrite an input")
         for lines in batches:
             events.extend(parse_log_lines(lines, year=args.year, include_plugins=not args.no_plugins))
         for path in args.events or []:

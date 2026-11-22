@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- reject HTML report paths that point to an input log, structured event file, or saved queue, including symbolic and hard links.
+
 ## 0.5.4 - 2026-11-10
 
 - preserve envelope recipients from Rspamd's default `rcpts` log field so recipient queries can find filter evidence, including multi-recipient rejections.

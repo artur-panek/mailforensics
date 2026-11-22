@@ -232,6 +232,8 @@ mailforensics explain \
 
 The HTML report contains no external JavaScript or assets.
 
+The report path must be separate from input logs, structured events, and saved queue files. Symbolic and hard links to inputs are rejected with exit code 2. An existing report can be replaced.
+
 ## Demo fixtures
 
 The repository includes small sanitized evidence sets for:
